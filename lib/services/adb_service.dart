@@ -1,29 +1,42 @@
 import 'dart:io';
 
 class AdbService {
-  String? adbPath;
   final String? scrcpyPath;
-  String? _cachedAdbPath;
+  String? adbPath;
 
   AdbService({this.adbPath, this.scrcpyPath});
 
   Future<String> get _adbExecutable async {
-    if (_cachedAdbPath != null) return _cachedAdbPath!;
-    if (adbPath != null) {
-      _cachedAdbPath = adbPath;
-      return adbPath!;
-    }
-    if (Platform.isWindows) {
-      _cachedAdbPath = 'adb.exe';
-      return 'adb.exe';
-    }
+    // 首先尝试从环境变量中查找 adb
+    try {
+      String command;
+      List<String> args;
+
+      if (Platform.isWindows) {
+        command = 'where';
+        args = ['adb'];
+      } else {
+        command = 'which';
+        args = ['adb'];
+      }
+
+      final result = await Process.run(command, args);
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+        adbPath = result.stdout.toString().trim().split('\n')[0];
+        return adbPath!;
+      }
+    } catch (_) {}
+
+    // 如果环境变量中找不到，则使用缓存的值
+    if (adbPath != null) return adbPath!;
+
+    // 如果是 macOS，尝试查找默认路径
     if (Platform.isMacOS) {
       final path = await findAdbPath() ?? '';
-      _cachedAdbPath = path;
+      adbPath = path;
       return path;
     }
-    _cachedAdbPath = 'adb';
-    return 'adb';
+    return '';
   }
 
   String get _scrcpyExecutable {
