@@ -1,14 +1,22 @@
 import 'dart:io';
 
 class AdbService {
-  final String? adbPath;
+  String? adbPath;
   final String? scrcpyPath;
 
-  AdbService({this.adbPath, this.scrcpyPath});
+  AdbService({this.adbPath, this.scrcpyPath}) {
+    if (Platform.isMacOS) {
+      Process.run('which', ['adb']).then((result) {
+        adbPath = result.stdout.toString().trim();
+        print('adbPath: $adbPath');
+      });
+    }
+  }
 
   String get _adbExecutable {
     if (adbPath != null) return adbPath!;
     if (Platform.isWindows) return 'adb.exe';
+    // if (Platform.isMacOS) return '/Users/blue/Library/Android/sdk/platform-tools/adb';
     return 'adb';
   }
 

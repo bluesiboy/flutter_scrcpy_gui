@@ -8,7 +8,7 @@
 PRODUCT_NAME = flutter_scrcpy_gui
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.flutterScrcpyGui
+PRODUCT_BUNDLE_IDENTIFIER = com.blueisboy.flutterScrcpyGui
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.blueisboy. All rights reserved.
