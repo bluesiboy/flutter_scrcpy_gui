@@ -161,13 +161,13 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                           subtitle: Text('选择适合您设备的编码器', style: _getSubtitleStyle(textTheme)),
                           trailing: SizedBox(
                             width: 120,
-                            child: DropdownButtonFormField<String>(
+                            child: DropdownButton<String>(
                               value: _config.encoder?.isEmpty ?? true ? 'software' : _config.encoder,
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                border: OutlineInputBorder(),
-                                labelText: '编码器',
+                              isDense: true,
+                              isExpanded: true,
+                              underline: Container(
+                                height: 1,
+                                color: Theme.of(context).colorScheme.outline,
                               ),
                               items: const [
                                 DropdownMenuItem(
@@ -191,7 +191,11 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                   child: Text('联发科265'),
                                 ),
                               ],
-                              onChanged: (value) => _config = _config.copyWith(encoder: value ?? 'software'),
+                              onChanged: (value) {
+                                setState(() {
+                                  _config = _config.copyWith(encoder: value ?? 'software');
+                                });
+                              },
                             ),
                           ),
                         ),
@@ -641,6 +645,8 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              Text('保存后更改才会生效', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+              const SizedBox(width: 16),
               FilledButton(
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {

@@ -1,26 +1,154 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class DeviceConfig {
+  final String deviceId;
+  final String? adbPath;
+  final String? scrcpyPath;
+  final int maxSize;
+  final int bitRate;
+  final bool stayAwake;
+  final bool turnScreenOff;
+  final bool showTouches;
+  final bool fullscreen;
+  final bool alwaysOnTop;
+  final bool disableScreensaver;
+  final bool noAudio;
+  final bool noVideo;
+  final bool noControl;
+  final bool noDisplay;
+  final String? encoder;
+  final String? crop;
+  final int? lockVideoOrientation;
+  final int? maxFps;
+  final String? renderDriver;
+  final String? windowTitle;
+  final int? windowX;
+  final int? windowY;
+  final int? windowWidth;
+  final int? windowHeight;
+  final int? keyRepeat;
+  final int? keyRepeatDelay;
+  final String? shortcutMod;
+  final String? record;
+  final String? recordFormat;
 
-part 'device_config.freezed.dart';
-part 'device_config.g.dart';
+  DeviceConfig({
+    required this.deviceId,
+    this.adbPath,
+    this.scrcpyPath,
+    this.maxSize = 1920,
+    this.bitRate = 0,
+    this.stayAwake = false,
+    this.turnScreenOff = false,
+    this.showTouches = false,
+    this.fullscreen = false,
+    this.alwaysOnTop = false,
+    this.disableScreensaver = false,
+    this.noAudio = false,
+    this.noVideo = false,
+    this.noControl = false,
+    this.noDisplay = false,
+    this.encoder,
+    this.crop,
+    this.lockVideoOrientation,
+    this.maxFps,
+    this.renderDriver,
+    this.windowTitle,
+    this.windowX,
+    this.windowY,
+    this.windowWidth,
+    this.windowHeight,
+    this.keyRepeat,
+    this.keyRepeatDelay,
+    this.shortcutMod,
+    this.record,
+    this.recordFormat,
+  });
 
-@freezed
-class DeviceConfig with _$DeviceConfig {
-  const factory DeviceConfig({
-    required String deviceId,
+  Map<String, dynamic> toJson() {
+    return {
+      'deviceId': deviceId,
+      'adbPath': adbPath,
+      'scrcpyPath': scrcpyPath,
+      'maxSize': maxSize,
+      'bitRate': bitRate,
+      'stayAwake': stayAwake,
+      'turnScreenOff': turnScreenOff,
+      'showTouches': showTouches,
+      'fullscreen': fullscreen,
+      'alwaysOnTop': alwaysOnTop,
+      'disableScreensaver': disableScreensaver,
+      'noAudio': noAudio,
+      'noVideo': noVideo,
+      'noControl': noControl,
+      'noDisplay': noDisplay,
+      'encoder': encoder,
+      'crop': crop,
+      'lockVideoOrientation': lockVideoOrientation,
+      'maxFps': maxFps,
+      'renderDriver': renderDriver,
+      'windowTitle': windowTitle,
+      'windowX': windowX,
+      'windowY': windowY,
+      'windowWidth': windowWidth,
+      'windowHeight': windowHeight,
+      'keyRepeat': keyRepeat,
+      'keyRepeatDelay': keyRepeatDelay,
+      'shortcutMod': shortcutMod,
+      'record': record,
+      'recordFormat': recordFormat,
+    };
+  }
+
+  factory DeviceConfig.fromJson(Map<String, dynamic> json) {
+    return DeviceConfig(
+      deviceId: json['deviceId'] as String,
+      adbPath: json['adbPath'] as String?,
+      scrcpyPath: json['scrcpyPath'] as String?,
+      maxSize: json['maxSize'] as int? ?? 1920,
+      bitRate: json['bitRate'] as int? ?? 0,
+      stayAwake: json['stayAwake'] as bool? ?? false,
+      turnScreenOff: json['turnScreenOff'] as bool? ?? false,
+      showTouches: json['showTouches'] as bool? ?? false,
+      fullscreen: json['fullscreen'] as bool? ?? false,
+      alwaysOnTop: json['alwaysOnTop'] as bool? ?? false,
+      disableScreensaver: json['disableScreensaver'] as bool? ?? false,
+      noAudio: json['noAudio'] as bool? ?? false,
+      noVideo: json['noVideo'] as bool? ?? false,
+      noControl: json['noControl'] as bool? ?? false,
+      noDisplay: json['noDisplay'] as bool? ?? false,
+      encoder: json['encoder'] as String?,
+      crop: json['crop'] as String?,
+      lockVideoOrientation: json['lockVideoOrientation'] as int?,
+      maxFps: json['maxFps'] as int?,
+      renderDriver: json['renderDriver'] as String?,
+      windowTitle: json['windowTitle'] as String?,
+      windowX: json['windowX'] as int?,
+      windowY: json['windowY'] as int?,
+      windowWidth: json['windowWidth'] as int?,
+      windowHeight: json['windowHeight'] as int?,
+      keyRepeat: json['keyRepeat'] as int?,
+      keyRepeatDelay: json['keyRepeatDelay'] as int?,
+      shortcutMod: json['shortcutMod'] as String?,
+      record: json['record'] as String?,
+      recordFormat: json['recordFormat'] as String?,
+    );
+  }
+
+  DeviceConfig copyWith({
+    String? deviceId,
     String? adbPath,
     String? scrcpyPath,
-    @Default(1920) int maxSize,
-    @Default(0) int bitRate,
-    @Default(false) bool stayAwake,
-    @Default(false) bool turnScreenOff,
-    @Default(false) bool showTouches,
-    @Default(false) bool fullscreen,
-    @Default(false) bool alwaysOnTop,
-    @Default(false) bool disableScreensaver,
-    @Default(false) bool noAudio,
-    @Default(false) bool noVideo,
-    @Default(false) bool noControl,
-    @Default(false) bool noDisplay,
+    int? maxSize,
+    int? bitRate,
+    bool? stayAwake,
+    bool? turnScreenOff,
+    bool? showTouches,
+    bool? fullscreen,
+    bool? alwaysOnTop,
+    bool? disableScreensaver,
+    bool? noAudio,
+    bool? noVideo,
+    bool? noControl,
+    bool? noDisplay,
     String? encoder,
     String? crop,
     int? lockVideoOrientation,
@@ -36,40 +164,38 @@ class DeviceConfig with _$DeviceConfig {
     String? shortcutMod,
     String? record,
     String? recordFormat,
-    @Default(false) bool noPowerOn,
-    @Default(false) bool noPowerOff,
-    @Default(false) bool noPowerOffOnClose,
-    @Default(false) bool noPowerOffOnDisconnect,
-    @Default(false) bool noPowerOffOnError,
-    @Default(false) bool noPowerOffOnExit,
-    @Default(false) bool noPowerOffOnStop,
-    @Default(false) bool noPowerOffOnSuspend,
-    @Default(false) bool noPowerOffOnResume,
-    @Default(false) bool noPowerOffOnLock,
-    @Default(false) bool noPowerOffOnUnlock,
-    @Default(false) bool noPowerOffOnScreenOff,
-    @Default(false) bool noPowerOffOnScreenOn,
-    @Default(false) bool noPowerOffOnBatteryLow,
-    @Default(false) bool noPowerOffOnBatteryCritical,
-    @Default(false) bool noPowerOffOnBatteryFull,
-    @Default(false) bool noPowerOffOnBatteryCharging,
-    @Default(false) bool noPowerOffOnBatteryDischarging,
-    @Default(false) bool noPowerOffOnBatteryNotCharging,
-    @Default(false) bool noPowerOffOnBatteryUnknown,
-    @Default(false) bool noPowerOffOnBatteryNotPresent,
-    @Default(false) bool noPowerOffOnBatteryPresent,
-    @Default(false) bool noPowerOffOnBatteryChargingAC,
-    @Default(false) bool noPowerOffOnBatteryChargingUSB,
-    @Default(false) bool noPowerOffOnBatteryChargingWireless,
-    @Default(false) bool noPowerOffOnBatteryChargingUnknown,
-    @Default(false) bool noPowerOffOnBatteryChargingNotCharging,
-    @Default(false) bool noPowerOffOnBatteryChargingDischarging,
-    @Default(false) bool noPowerOffOnBatteryChargingFull,
-    @Default(false) bool noPowerOffOnBatteryChargingLow,
-    @Default(false) bool noPowerOffOnBatteryChargingCritical,
-    @Default(false) bool noPowerOffOnBatteryChargingNotPresent,
-    @Default(false) bool noPowerOffOnBatteryChargingPresent,
-  }) = _DeviceConfig;
-
-  factory DeviceConfig.fromJson(Map<String, dynamic> json) => _$DeviceConfigFromJson(json);
+  }) {
+    return DeviceConfig(
+      deviceId: deviceId ?? this.deviceId,
+      adbPath: adbPath ?? this.adbPath,
+      scrcpyPath: scrcpyPath ?? this.scrcpyPath,
+      maxSize: maxSize ?? this.maxSize,
+      bitRate: bitRate ?? this.bitRate,
+      stayAwake: stayAwake ?? this.stayAwake,
+      turnScreenOff: turnScreenOff ?? this.turnScreenOff,
+      showTouches: showTouches ?? this.showTouches,
+      fullscreen: fullscreen ?? this.fullscreen,
+      alwaysOnTop: alwaysOnTop ?? this.alwaysOnTop,
+      disableScreensaver: disableScreensaver ?? this.disableScreensaver,
+      noAudio: noAudio ?? this.noAudio,
+      noVideo: noVideo ?? this.noVideo,
+      noControl: noControl ?? this.noControl,
+      noDisplay: noDisplay ?? this.noDisplay,
+      encoder: encoder ?? this.encoder,
+      crop: crop ?? this.crop,
+      lockVideoOrientation: lockVideoOrientation ?? this.lockVideoOrientation,
+      maxFps: maxFps ?? this.maxFps,
+      renderDriver: renderDriver ?? this.renderDriver,
+      windowTitle: windowTitle ?? this.windowTitle,
+      windowX: windowX ?? this.windowX,
+      windowY: windowY ?? this.windowY,
+      windowWidth: windowWidth ?? this.windowWidth,
+      windowHeight: windowHeight ?? this.windowHeight,
+      keyRepeat: keyRepeat ?? this.keyRepeat,
+      keyRepeatDelay: keyRepeatDelay ?? this.keyRepeatDelay,
+      shortcutMod: shortcutMod ?? this.shortcutMod,
+      record: record ?? this.record,
+      recordFormat: recordFormat ?? this.recordFormat,
+    );
+  }
 }

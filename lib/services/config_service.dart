@@ -12,6 +12,7 @@ class ConfigService {
   static const String _windowLeftKey = 'window_left';
   static const String _windowTopKey = 'window_top';
   static const String _themeModeKey = 'theme_mode';
+  static const String _adbPathKey = 'adb_path';
   final SharedPreferences _prefs;
 
   ConfigService(this._prefs);
@@ -84,5 +85,15 @@ class ConfigService {
   ThemeMode getThemeMode() {
     final index = _prefs.getInt(_themeModeKey);
     return index != null ? ThemeMode.values[index] : ThemeMode.system;
+  }
+
+  // 保存 ADB 路径
+  Future<void> saveAdbPath(String path) async {
+    await _prefs.setString(_adbPathKey, path);
+  }
+
+  // 获取 ADB 路径
+  String? getAdbPath() {
+    return _prefs.getString(_adbPathKey);
   }
 }

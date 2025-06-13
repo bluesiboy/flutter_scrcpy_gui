@@ -3,20 +3,26 @@ import 'dart:io';
 class AdbService {
   String? adbPath;
   final String? scrcpyPath;
+  String? _cachedAdbPath;
 
-  AdbService({this.adbPath, this.scrcpyPath}) {
-    if (Platform.isMacOS) {
-      Process.run('which', ['adb']).then((result) {
-        adbPath = result.stdout.toString().trim();
-        print('adbPath: $adbPath');
-      });
+  AdbService({this.adbPath, this.scrcpyPath});
+
+  Future<String> get _adbExecutable async {
+    if (_cachedAdbPath != null) return _cachedAdbPath!;
+    if (adbPath != null) {
+      _cachedAdbPath = adbPath;
+      return adbPath!;
     }
-  }
-
-  String get _adbExecutable {
-    if (adbPath != null) return adbPath!;
-    if (Platform.isWindows) return 'adb.exe';
-    // if (Platform.isMacOS) return '/Users/blue/Library/Android/sdk/platform-tools/adb';
+    if (Platform.isWindows) {
+      _cachedAdbPath = 'adb.exe';
+      return 'adb.exe';
+    }
+    if (Platform.isMacOS) {
+      final path = await findAdbPath() ?? '';
+      _cachedAdbPath = path;
+      return path;
+    }
+    _cachedAdbPath = 'adb';
     return 'adb';
   }
 
@@ -27,26 +33,38 @@ class AdbService {
   }
 
   Future<List<String>> getConnectedDevices() async {
-    try {
-      final result = await Process.run(_adbExecutable, ['devices']);
-      final lines = result.stdout.toString().split('\n');
-      return lines
-          .where((line) => line.trim().isNotEmpty && !line.startsWith('List'))
-          .map((line) => line.split('\t')[0])
-          .toList();
-    } catch (e) {
-      return [];
+    final adbPath = await _adbExecutable;
+    if (!await File(adbPath).exists()) {
+      throw Exception('adb 可执行文件不存在: $adbPath');
     }
+    final result = await Process.run(adbPath, ['devices']);
+    final lines = result.stdout.toString().split('\n');
+    return lines
+        .where((line) => line.trim().isNotEmpty && !line.startsWith('List'))
+        .map((line) => line.split('\t')[0])
+        .toList();
   }
 
   Future<bool> isDeviceConnected(String deviceId) async {
-    final devices = await getConnectedDevices();
-    return devices.contains(deviceId);
+    try {
+      final adbPath = await _adbExecutable;
+      if (!await File(adbPath).exists()) {
+        throw Exception('adb 可执行文件不存在: $adbPath');
+      }
+      final devices = await getConnectedDevices();
+      return devices.contains(deviceId) == true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<void> startScrcpy(String deviceId, Map<String, dynamic> options) async {
     final scrcpyPath = options['scrcpyPath'] as String? ?? _scrcpyExecutable;
+    final adbPath = await _adbExecutable;
 
+    if (!await File(adbPath).exists()) {
+      throw Exception('adb 可执行文件不存在: $adbPath');
+    }
     if (!await File(scrcpyPath).exists()) {
       throw Exception('scrcpy 可执行文件不存在: $scrcpyPath');
     }
@@ -211,7 +229,11 @@ class AdbService {
 
   Future<String> getDeviceName(String deviceId) async {
     try {
-      final result = await Process.run(_adbExecutable, ['-s', deviceId, 'shell', 'getprop', 'ro.product.model']);
+      final adbPath = await _adbExecutable;
+      if (!await File(adbPath).exists()) {
+        throw Exception('adb 可执行文件不存在: $adbPath');
+      }
+      final result = await Process.run(adbPath, ['-s', deviceId, 'shell', 'getprop', 'ro.product.model']);
       if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
         return result.stdout.toString().trim();
       }
@@ -219,5 +241,34 @@ class AdbService {
     } catch (e) {
       return deviceId;
     }
+  }
+
+  /// 返回第一个找到的 adb 路径
+  Future<String?> findAdbPath() async {
+    final candidates = [
+      '${Platform.environment['HOME']}/Library/Android/sdk/platform-tools/adb',
+      '/usr/local/bin/adb',
+      '/opt/homebrew/bin/adb',
+      if (Platform.environment['ANDROID_HOME'] != null) '${Platform.environment['ANDROID_HOME']}/platform-tools/adb',
+      if (Platform.environment['ANDROID_SDK_ROOT'] != null)
+        '${Platform.environment['ANDROID_SDK_ROOT']}/platform-tools/adb',
+    ];
+
+    for (var path in candidates) {
+      final file = File(path);
+      if (await file.exists()) {
+        return file.path;
+      }
+    }
+
+    // 尝试使用 which 查找 adb
+    try {
+      final result = await Process.run('which', ['adb']);
+      if (result.exitCode == 0) {
+        return (result.stdout as String).trim();
+      }
+    } catch (_) {}
+
+    return null; // 未找到
   }
 }
