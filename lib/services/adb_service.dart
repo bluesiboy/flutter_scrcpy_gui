@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'dart:math';
+import 'dart:convert';
+import 'dart:async';
+import 'package:path/path.dart' as path;
 
 class AdbService {
   final String? scrcpyPath;
@@ -45,17 +49,27 @@ class AdbService {
     return 'scrcpy';
   }
 
-  Future<List<String>> getConnectedDevices() async {
+  Future<List<Map<String, String>>> getConnectedDevices() async {
     final adbPath = await _adbExecutable;
     if (!await File(adbPath).exists()) {
       throw Exception('adb 可执行文件不存在: $adbPath');
     }
     final result = await Process.run(adbPath, ['devices']);
     final lines = result.stdout.toString().split('\n');
-    return lines
-        .where((line) => line.trim().isNotEmpty && !line.startsWith('List'))
-        .map((line) => line.split('\t')[0])
-        .toList();
+    return lines.where((line) => line.trim().isNotEmpty && !line.startsWith('List')).map((line) {
+      final parts = line.split('\t');
+      print(parts.join(','));
+      if (parts.length >= 2) {
+        return {
+          'id': parts[0].trim(),
+          'state': parts[1].trim(),
+        };
+      }
+      return {
+        'id': parts[0].trim(),
+        'state': 'unknown',
+      };
+    }).toList();
   }
 
   Future<bool> isDeviceConnected(String deviceId) async {
@@ -95,6 +109,24 @@ class AdbService {
     if (options['bitRate'] != null && options['bitRate'] > 0) {
       args.add('--video-bit-rate');
       args.add('${options['bitRate']}M');
+    }
+
+    // 录制参数
+    if (options['recordDirectory'] != null) {
+      final directory = options['recordDirectory'] as String;
+      final format = options['recordFormat'] != null && options['recordFormat'].toString().isEmpty
+          ? 'mp4'
+          : options['recordFormat'];
+      final timestamp = DateTime.now().toString().replaceAll(RegExp(r'[^0-9]'), '');
+      final filename = '${deviceId}_$timestamp.$format';
+      final recordPath = path.join(directory, filename);
+      args.add('--record');
+      args.add(recordPath);
+      args.add('--record-format');
+      args.add(format);
+    } else if (options['record'] != null) {
+      args.add('--record');
+      args.add(options['record']);
     }
 
     // 编码相关参数
@@ -163,16 +195,6 @@ class AdbService {
     if (options['shortcutMod'] != null && options['shortcutMod'].toString().isNotEmpty) {
       args.add('--shortcut-mod');
       args.add(options['shortcutMod']);
-    }
-
-    // 录制相关参数
-    if (options['record'] != null && options['record'].toString().isNotEmpty) {
-      args.add('--record');
-      args.add(options['record']);
-    }
-    if (options['recordFormat'] != null && options['recordFormat'].toString().isNotEmpty) {
-      args.add('--record-format');
-      args.add(options['recordFormat']);
     }
 
     // 开关参数

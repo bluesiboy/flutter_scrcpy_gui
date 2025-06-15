@@ -104,7 +104,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                       isDense: widget.isCompact,
                       contentPadding: widget.isCompact ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8) : null,
                     ),
-                    onChanged: (value) => _config = _config.copyWith(adbPath: value),
+                    onChanged: (value) => setState(() {
+                      _config = _config.copyWith(adbPath: value.isEmpty ? null : value);
+                    }),
                   ),
                   SizedBox(height: _currentSpacing),
                   TextFormField(
@@ -116,11 +118,13 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                       isDense: widget.isCompact,
                       contentPadding: widget.isCompact ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8) : null,
                     ),
-                    onChanged: (value) => _config = _config.copyWith(scrcpyPath: value),
+                    onChanged: (value) => setState(() {
+                      _config = _config.copyWith(scrcpyPath: value.isEmpty ? null : value);
+                    }),
                   ),
                   SizedBox(height: _currentSpacing),
                   TextFormField(
-                    initialValue: _config.maxSize.toString(),
+                    initialValue: _config.maxSize?.toString(),
                     decoration: InputDecoration(
                       labelText: '最大尺寸 (像素)',
                       helperText: '推荐值：1920（1080p）或 2560（2K）',
@@ -129,11 +133,13 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                       contentPadding: widget.isCompact ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8) : null,
                     ),
                     keyboardType: TextInputType.number,
-                    onChanged: (value) => _config = _config.copyWith(maxSize: int.tryParse(value) ?? 1920),
+                    onChanged: (value) => setState(() {
+                      _config = _config.copyWith(maxSize: value.isEmpty ? null : int.tryParse(value));
+                    }),
                   ),
                   SizedBox(height: _currentSpacing),
                   TextFormField(
-                    initialValue: _config.bitRate.toString(),
+                    initialValue: _config.bitRate?.toString(),
                     decoration: InputDecoration(
                       labelText: '比特率 (Mbps)',
                       helperText: '推荐值：8-16，值越大画质越好但占用更多带宽',
@@ -142,7 +148,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                       contentPadding: widget.isCompact ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8) : null,
                     ),
                     keyboardType: TextInputType.number,
-                    onChanged: (value) => _config = _config.copyWith(bitRate: int.tryParse(value) ?? 0),
+                    onChanged: (value) => setState(() {
+                      _config = _config.copyWith(bitRate: value.isEmpty ? null : int.tryParse(value));
+                    }),
                   ),
                   SizedBox(height: _currentSpacing),
                   Text('编码选项',
@@ -216,7 +224,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                 border: OutlineInputBorder(),
                                 labelText: '宽:高:X:Y',
                               ),
-                              onChanged: (value) => _config = _config.copyWith(crop: value),
+                              onChanged: (value) => setState(() {
+                                _config = _config.copyWith(crop: value.isEmpty ? null : value);
+                              }),
                             ),
                           ),
                         ),
@@ -237,8 +247,10 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                 labelText: '方向值',
                               ),
                               keyboardType: TextInputType.number,
-                              onChanged: (value) =>
-                                  _config = _config.copyWith(lockVideoOrientation: int.tryParse(value)),
+                              onChanged: (value) => setState(() {
+                                _config =
+                                    _config.copyWith(lockVideoOrientation: value.isEmpty ? null : int.tryParse(value));
+                              }),
                             ),
                           ),
                         ),
@@ -259,7 +271,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                 labelText: '帧率 (fps)',
                               ),
                               keyboardType: TextInputType.number,
-                              onChanged: (value) => _config = _config.copyWith(maxFps: int.tryParse(value)),
+                              onChanged: (value) => setState(() {
+                                _config = _config.copyWith(maxFps: value.isEmpty ? null : int.tryParse(value));
+                              }),
                             ),
                           ),
                         ),
@@ -291,7 +305,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                 border: OutlineInputBorder(),
                                 labelText: '标题',
                               ),
-                              onChanged: (value) => _config = _config.copyWith(windowTitle: value),
+                              onChanged: (value) => setState(() {
+                                _config = _config.copyWith(windowTitle: value.isEmpty ? null : value);
+                              }),
                             ),
                           ),
                         ),
@@ -315,7 +331,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                     labelText: 'X (px)',
                                   ),
                                   keyboardType: TextInputType.number,
-                                  onChanged: (value) => _config = _config.copyWith(windowX: int.tryParse(value)),
+                                  onChanged: (value) => setState(() {
+                                    _config = _config.copyWith(windowX: value.isEmpty ? null : int.tryParse(value));
+                                  }),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -330,7 +348,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                     labelText: 'Y (px)',
                                   ),
                                   keyboardType: TextInputType.number,
-                                  onChanged: (value) => _config = _config.copyWith(windowY: int.tryParse(value)),
+                                  onChanged: (value) => setState(() {
+                                    _config = _config.copyWith(windowY: value.isEmpty ? null : int.tryParse(value));
+                                  }),
                                 ),
                               ),
                             ],
@@ -356,7 +376,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                     labelText: '宽 (px)',
                                   ),
                                   keyboardType: TextInputType.number,
-                                  onChanged: (value) => _config = _config.copyWith(windowWidth: int.tryParse(value)),
+                                  onChanged: (value) => setState(() {
+                                    _config = _config.copyWith(windowWidth: value.isEmpty ? null : int.tryParse(value));
+                                  }),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -371,7 +393,10 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                     labelText: '高 (px)',
                                   ),
                                   keyboardType: TextInputType.number,
-                                  onChanged: (value) => _config = _config.copyWith(windowHeight: int.tryParse(value)),
+                                  onChanged: (value) => setState(() {
+                                    _config =
+                                        _config.copyWith(windowHeight: value.isEmpty ? null : int.tryParse(value));
+                                  }),
                                 ),
                               ),
                             ],
@@ -393,19 +418,21 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                         ListTile(
                           visualDensity: _currentVisualDensity,
                           contentPadding: _currentContentPadding,
-                          title: Text('录制文件', style: _getBodyStyle(textTheme)),
-                          subtitle: Text('支持相对路径和绝对路径', style: _getSubtitleStyle(textTheme)),
+                          title: Text('录制目录', style: _getBodyStyle(textTheme)),
+                          subtitle: Text('选择录制文件的保存目录，文件名将自动生成', style: _getSubtitleStyle(textTheme)),
                           trailing: SizedBox(
                             width: 120,
                             child: TextFormField(
-                              initialValue: _config.record,
+                              initialValue: _config.recordDirectory,
                               decoration: const InputDecoration(
                                 isDense: true,
                                 contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                 border: OutlineInputBorder(),
-                                labelText: '文件路径',
+                                labelText: '目录路径',
                               ),
-                              onChanged: (value) => _config = _config.copyWith(record: value),
+                              onChanged: (value) => setState(() {
+                                _config = _config.copyWith(recordDirectory: value.isEmpty ? null : value);
+                              }),
                             ),
                           ),
                         ),
@@ -425,7 +452,9 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                 border: OutlineInputBorder(),
                                 labelText: '格式',
                               ),
-                              onChanged: (value) => _config = _config.copyWith(recordFormat: value),
+                              onChanged: (value) => setState(() {
+                                _config = _config.copyWith(recordFormat: value.isEmpty ? null : value);
+                              }),
                             ),
                           ),
                         ),

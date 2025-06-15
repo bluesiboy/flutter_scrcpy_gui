@@ -36,6 +36,9 @@ class LayoutSizes {
 
   static const double verticalSpacing = 8.0;
   static const double verticalSpacingCompact = 4.0;
+
+  static const double horizontalSpacing = 8.0;
+  static const double horizontalSpacingCompact = 4.0;
 }
 
 // 定义一个Riverpod StateProvider来管理紧凑模式状态
@@ -164,9 +167,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   late final AdbService _adbService;
   late final ConfigService _configService;
   late final BreathGlowController _breathGlowController;
-  List<String> _devices = [];
-  bool _isLoading = true;
+  List<Map<String, String>> _devices = [];
   String? _selectedDeviceId;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -198,8 +201,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       setState(() {
         _devices = devices;
         _isLoading = false;
-        if (_selectedDeviceId == null || !devices.contains(_selectedDeviceId)) {
-          _selectedDeviceId = devices.isNotEmpty ? devices.first : null;
+        if (_selectedDeviceId == null || !devices.any((d) => d['id'] == _selectedDeviceId)) {
+          _selectedDeviceId = devices.isNotEmpty ? devices.first['id'] : null;
         }
       });
     } catch (e) {
@@ -482,11 +485,36 @@ class _HomePageState extends ConsumerState<HomePage> {
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _devices.length,
                       itemBuilder: (context, index) {
-                        final deviceId = _devices[index];
+                        final device = _devices[index];
+                        final deviceId = device['id']!;
+                        final deviceState = device['state']!;
+                        String statusText;
+                        bool canConnect = false;
+
+                        switch (deviceState) {
+                          case 'device':
+                            statusText = '设备已连接并已授权';
+                            canConnect = true;
+                            break;
+                          case 'unauthorized':
+                            statusText = '设备已连接但未授权，请在设备上确认授权';
+                            break;
+                          case 'offline':
+                            statusText = '设备已连接但处于离线状态';
+                            break;
+                          default:
+                            statusText = '设备状态未知';
+                        }
+
                         return DeviceCard(
                           deviceId: deviceId,
-                          onStart: () => _startScrcpy(deviceId),
-                          onConfigure: () => _selectDevice(deviceId),
+                          statusText: statusText,
+                          deviceState: deviceState,
+                          canConnect: canConnect,
+                          onStart: canConnect ? (id) => _startScrcpy(id) : null,
+                          onSelect: (id) => _selectDevice(id),
+                          onConfigChanged: (config) => _saveConfig(config),
+                          config: _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId),
                           isSelected: deviceId == _selectedDeviceId,
                           isCompact: isCompactMode,
                         ).animate().fadeIn().slideX();
@@ -505,8 +533,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   )
                 : IndexedStack(
-                    index: _devices.indexOf(_selectedDeviceId!),
-                    children: _devices.map((deviceId) {
+                    index: _devices.indexWhere((d) => d['id'] == _selectedDeviceId),
+                    children: _devices.map((device) {
+                      final deviceId = device['id']!;
                       final config = _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId);
                       return DeviceConfigDialog(
                         key: ValueKey(deviceId),
@@ -617,17 +646,27 @@ class _HomePageState extends ConsumerState<HomePage> {
 
 class DeviceCard extends StatefulWidget {
   final String deviceId;
-  final Future<void> Function() onStart;
-  final VoidCallback onConfigure;
+  final String statusText;
+  final String deviceState;
+  final bool canConnect;
   final bool isSelected;
+  final Function(String) onSelect;
+  final Function(String)? onStart;
+  final Function(DeviceConfig) onConfigChanged;
+  final DeviceConfig config;
   final bool isCompact;
 
   const DeviceCard({
     super.key,
     required this.deviceId,
-    required this.onStart,
-    required this.onConfigure,
+    required this.statusText,
+    required this.deviceState,
+    required this.canConnect,
     required this.isSelected,
+    required this.onSelect,
+    this.onStart,
+    required this.onConfigChanged,
+    required this.config,
     this.isCompact = false,
   });
 
@@ -636,60 +675,147 @@ class DeviceCard extends StatefulWidget {
 }
 
 class _DeviceCardState extends State<DeviceCard> {
+  String? _deviceName;
+  bool _isLoading = true;
   bool _isRunning = false;
+  final _adbService = AdbService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDeviceName();
+  }
+
+  Future<void> _loadDeviceName() async {
+    try {
+      final name = await _adbService.getDeviceName(widget.deviceId);
+      if (mounted) {
+        setState(() {
+          _deviceName = name;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _deviceName = widget.deviceId;
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   Future<void> _handleStart() async {
     if (_isRunning) return;
-
-    setState(() {
-      _isRunning = true;
-    });
-
+    setState(() => _isRunning = true);
     try {
-      await widget.onStart();
+      await widget.onStart?.call(widget.deviceId);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isRunning = false;
-        });
-      }
+      if (mounted) setState(() => _isRunning = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isCompact = widget.isCompact;
     return Card(
       margin: EdgeInsets.symmetric(
-        horizontal: widget.isCompact ? LayoutSizes.cardMarginCompact : LayoutSizes.cardMargin,
-        vertical: widget.isCompact ? LayoutSizes.verticalSpacingCompact : LayoutSizes.verticalSpacing,
+        horizontal: isCompact ? LayoutSizes.cardMarginCompact : LayoutSizes.cardMargin,
+        vertical: isCompact ? LayoutSizes.verticalSpacingCompact : LayoutSizes.verticalSpacing,
       ),
       color: widget.isSelected ? Theme.of(context).colorScheme.primaryContainer : null,
       child: InkWell(
-        onTap: widget.onConfigure,
+        onTap: () => widget.onSelect(widget.deviceId),
         child: ListTile(
-          dense: widget.isCompact,
+          dense: isCompact,
+          minVerticalPadding: isCompact ? 0.0 : 8.0,
+          minLeadingWidth: isCompact ? 24.0 : 32.0,
           contentPadding: EdgeInsets.symmetric(
-            horizontal: widget.isCompact ? LayoutSizes.cardPaddingCompact : LayoutSizes.cardPadding,
-            vertical: widget.isCompact ? LayoutSizes.verticalSpacingCompact : LayoutSizes.verticalSpacing,
+            horizontal: isCompact ? LayoutSizes.cardPaddingCompact : LayoutSizes.cardPadding,
+            vertical: isCompact ? 2.0 : 4.0,
           ),
-          title: Text(
-            widget.deviceId,
-            style: widget.isCompact ? textTheme.titleMedium : textTheme.titleLarge,
-          ),
-          trailing: IconButton(
-            icon: _isRunning
-                ? SizedBox(
-                    width: widget.isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                    height: widget.isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    Icons.play_arrow,
-                    size: widget.isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+          leading: _isLoading
+              ? SizedBox(
+                  width: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+                  height: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+                  child: const CircularProgressIndicator(strokeWidth: 2.0),
+                )
+              : Icon(
+                  Icons.phone_android,
+                  size: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+                  color: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
+                ),
+          title: isCompact
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _deviceName ?? widget.deviceId,
+                        style: textTheme.bodyMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      widget.deviceState,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: widget.canConnect ? Colors.green : Colors.orange,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                )
+              : Text(
+                  _deviceName ?? widget.deviceId,
+                  style: textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+          subtitle: !isCompact
+              ? Text(
+                  widget.deviceState,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: widget.canConnect ? Colors.green : Colors.orange,
                   ),
-            onPressed: _isRunning ? null : _handleStart,
-          ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : null,
+          trailing: widget.canConnect && widget.onStart != null
+              ? IconButton(
+                  onPressed: _isRunning ? null : _handleStart,
+                  icon: _isRunning
+                      ? SizedBox(
+                          width: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+                          height: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          Icons.play_arrow,
+                          size: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                  tooltip: '启动',
+                  constraints: BoxConstraints(
+                    minWidth: isCompact ? 32 : 48,
+                    minHeight: isCompact ? 32 : 48,
+                    maxWidth: isCompact ? 32 : 48,
+                    maxHeight: isCompact ? 32 : 48,
+                  ),
+                  padding: EdgeInsets.all(isCompact ? 4 : 8),
+                )
+              : widget.statusText.isNotEmpty
+                  ? Tooltip(
+                      message: widget.statusText,
+                      child: Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                        size: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+                      ),
+                    )
+                  : null,
         ),
       ),
     );

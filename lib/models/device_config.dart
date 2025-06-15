@@ -28,6 +28,7 @@ class DeviceConfig {
   final int? keyRepeatDelay;
   final String? shortcutMod;
   final String? record;
+  final String? recordDirectory;
   final String? recordFormat;
 
   DeviceConfig({
@@ -60,6 +61,7 @@ class DeviceConfig {
     this.keyRepeatDelay,
     this.shortcutMod,
     this.record,
+    this.recordDirectory,
     this.recordFormat,
   });
 
@@ -94,6 +96,7 @@ class DeviceConfig {
       'keyRepeatDelay': keyRepeatDelay,
       'shortcutMod': shortcutMod,
       'record': record,
+      'recordDirectory': recordDirectory,
       'recordFormat': recordFormat,
     };
   }
@@ -129,14 +132,15 @@ class DeviceConfig {
       keyRepeatDelay: json['keyRepeatDelay'] as int?,
       shortcutMod: json['shortcutMod'] as String?,
       record: json['record'] as String?,
+      recordDirectory: json['recordDirectory'] as String?,
       recordFormat: json['recordFormat'] as String?,
     );
   }
 
   DeviceConfig copyWith({
     String? deviceId,
-    String? adbPath,
-    String? scrcpyPath,
+    Object? adbPath = const Object(),
+    Object? scrcpyPath = const Object(),
     int? maxSize,
     int? bitRate,
     bool? stayAwake,
@@ -149,26 +153,27 @@ class DeviceConfig {
     bool? noVideo,
     bool? noControl,
     bool? noDisplay,
-    String? encoder,
-    String? crop,
-    int? lockVideoOrientation,
-    int? maxFps,
-    String? renderDriver,
-    String? windowTitle,
-    int? windowX,
-    int? windowY,
-    int? windowWidth,
-    int? windowHeight,
-    int? keyRepeat,
-    int? keyRepeatDelay,
-    String? shortcutMod,
-    String? record,
-    String? recordFormat,
+    Object? encoder = const Object(),
+    Object? crop = const Object(),
+    Object? lockVideoOrientation = const Object(),
+    Object? maxFps = const Object(),
+    Object? renderDriver = const Object(),
+    Object? windowTitle = const Object(),
+    Object? windowX = const Object(),
+    Object? windowY = const Object(),
+    Object? windowWidth = const Object(),
+    Object? windowHeight = const Object(),
+    Object? keyRepeat = const Object(),
+    Object? keyRepeatDelay = const Object(),
+    Object? shortcutMod = const Object(),
+    Object? record = const Object(),
+    Object? recordDirectory = const Object(),
+    Object? recordFormat = const Object(),
   }) {
     return DeviceConfig(
       deviceId: deviceId ?? this.deviceId,
-      adbPath: adbPath ?? this.adbPath,
-      scrcpyPath: scrcpyPath ?? this.scrcpyPath,
+      adbPath: adbPath == const Object() ? this.adbPath : adbPath as String?,
+      scrcpyPath: scrcpyPath == const Object() ? this.scrcpyPath : scrcpyPath as String?,
       maxSize: maxSize ?? this.maxSize,
       bitRate: bitRate ?? this.bitRate,
       stayAwake: stayAwake ?? this.stayAwake,
@@ -181,21 +186,23 @@ class DeviceConfig {
       noVideo: noVideo ?? this.noVideo,
       noControl: noControl ?? this.noControl,
       noDisplay: noDisplay ?? this.noDisplay,
-      encoder: encoder ?? this.encoder,
-      crop: crop ?? this.crop,
-      lockVideoOrientation: lockVideoOrientation ?? this.lockVideoOrientation,
-      maxFps: maxFps ?? this.maxFps,
-      renderDriver: renderDriver ?? this.renderDriver,
-      windowTitle: windowTitle ?? this.windowTitle,
-      windowX: windowX ?? this.windowX,
-      windowY: windowY ?? this.windowY,
-      windowWidth: windowWidth ?? this.windowWidth,
-      windowHeight: windowHeight ?? this.windowHeight,
-      keyRepeat: keyRepeat ?? this.keyRepeat,
-      keyRepeatDelay: keyRepeatDelay ?? this.keyRepeatDelay,
-      shortcutMod: shortcutMod ?? this.shortcutMod,
-      record: record ?? this.record,
-      recordFormat: recordFormat ?? this.recordFormat,
+      encoder: encoder == const Object() ? this.encoder : encoder as String?,
+      crop: crop == const Object() ? this.crop : crop as String?,
+      lockVideoOrientation:
+          lockVideoOrientation == const Object() ? this.lockVideoOrientation : lockVideoOrientation as int?,
+      maxFps: maxFps == const Object() ? this.maxFps : maxFps as int?,
+      renderDriver: renderDriver == const Object() ? this.renderDriver : renderDriver as String?,
+      windowTitle: windowTitle == const Object() ? this.windowTitle : windowTitle as String?,
+      windowX: windowX == const Object() ? this.windowX : windowX as int?,
+      windowY: windowY == const Object() ? this.windowY : windowY as int?,
+      windowWidth: windowWidth == const Object() ? this.windowWidth : windowWidth as int?,
+      windowHeight: windowHeight == const Object() ? this.windowHeight : windowHeight as int?,
+      keyRepeat: keyRepeat == const Object() ? this.keyRepeat : keyRepeat as int?,
+      keyRepeatDelay: keyRepeatDelay == const Object() ? this.keyRepeatDelay : keyRepeatDelay as int?,
+      shortcutMod: shortcutMod == const Object() ? this.shortcutMod : shortcutMod as String?,
+      record: record == const Object() ? this.record : record as String?,
+      recordDirectory: recordDirectory == const Object() ? this.recordDirectory : recordDirectory as String?,
+      recordFormat: recordFormat == const Object() ? this.recordFormat : recordFormat as String?,
     );
   }
 }
