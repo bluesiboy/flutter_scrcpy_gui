@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:math';
-import 'dart:convert';
 import 'dart:async';
 import 'package:path/path.dart' as path;
 
@@ -86,6 +84,97 @@ class AdbService {
   }
 
   Future<void> startScrcpy(String deviceId, Map<String, dynamic> options) async {
+    // 验证设备ID
+    if (deviceId.isEmpty) {
+      throw Exception('设备ID不能为空');
+    }
+
+    // 验证视频相关参数
+    if (options['maxSize'] != null) {
+      final maxSize = options['maxSize'];
+      if (maxSize is! int || maxSize <= 0) {
+        throw Exception('最大尺寸必须是大于0的整数');
+      }
+    }
+
+    if (options['bitRate'] != null) {
+      final bitRate = options['bitRate'];
+      if (bitRate is! int || bitRate <= 0) {
+        throw Exception('视频码率必须是大于0的整数');
+      }
+    }
+
+    if (options['maxFps'] != null) {
+      final maxFps = options['maxFps'];
+      if (maxFps is! int || maxFps <= 0) {
+        throw Exception('最大帧率必须是大于0的整数');
+      }
+    }
+
+    // 验证窗口相关参数
+    if (options['windowX'] != null) {
+      final windowX = options['windowX'];
+      if (windowX is! int || windowX < 0) {
+        throw Exception('窗口X坐标必须是非负整数');
+      }
+    }
+
+    if (options['windowY'] != null) {
+      final windowY = options['windowY'];
+      if (windowY is! int || windowY < 0) {
+        throw Exception('窗口Y坐标必须是非负整数');
+      }
+    }
+
+    if (options['windowWidth'] != null) {
+      final windowWidth = options['windowWidth'];
+      if (windowWidth is! int || windowWidth <= 0) {
+        throw Exception('窗口宽度必须是大于0的整数');
+      }
+    }
+
+    if (options['windowHeight'] != null) {
+      final windowHeight = options['windowHeight'];
+      if (windowHeight is! int || windowHeight <= 0) {
+        throw Exception('窗口高度必须是大于0的整数');
+      }
+    }
+
+    // 验证录制相关参数
+    if (options['recordDirectory'] != null) {
+      final directory = options['recordDirectory'] as String;
+      if (directory.isEmpty) {
+        throw Exception('录制目录不能为空');
+      }
+      final dir = Directory(directory);
+      if (!await dir.exists()) {
+        throw Exception('录制目录不存在: $directory');
+      }
+    }
+
+    if (options['recordFormat'] != null) {
+      final format = options['recordFormat'].toString().toLowerCase();
+      if (!['mp4', 'mkv'].contains(format)) {
+        throw Exception('不支持的录制格式: $format，支持的格式: mp4, mkv');
+      }
+    }
+
+    // 验证编码器参数
+    if (options['encoder'] != null) {
+      final encoder = options['encoder'].toString().toLowerCase();
+      if (!['h264', 'h265'].contains(encoder)) {
+        throw Exception('不支持的编码器: $encoder，支持的编码器: H.264, H.265');
+      }
+    }
+
+    // 验证视频方向锁定参数
+    if (options['lockVideoOrientation'] != null) {
+      final orientation = options['lockVideoOrientation'];
+      if (orientation is! int || orientation < 0 || orientation > 3) {
+        throw Exception('视频方向锁定值必须是 0-3 之间的整数');
+      }
+    }
+
     final scrcpyPath = options['scrcpyPath'] as String? ?? _scrcpyExecutable;
     final adbPath = await _adbExecutable;
 

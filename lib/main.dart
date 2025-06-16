@@ -7,6 +7,7 @@ import 'package:flutter_scrcpy_gui/widgets/breath_glow_widget.dart';
 import 'package:flutter_scrcpy_gui/widgets/device_config_dialog.dart';
 import 'package:flutter_scrcpy_gui/widgets/device_card.dart';
 import 'package:flutter_scrcpy_gui/config/layout_config.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:window_manager/window_manager.dart';
@@ -112,9 +113,7 @@ class _MainAppState extends ConsumerState<MainApp> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    final isCompactMode = ref.watch(isCompactModeProvider);
     final themeMode = ref.watch(themeModeProvider);
-    final layoutConfig = ref.watch(layoutConfigProvider);
 
     return MaterialApp(
       title: 'Scrcpy GUI By blueisboy',
@@ -128,6 +127,7 @@ class _MainAppState extends ConsumerState<MainApp> with WindowListener {
         useMaterial3: true,
       ),
       home: HomePage(prefs: widget.prefs),
+      builder: FlutterSmartDialog.init(),
     );
   }
 }
@@ -185,7 +185,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       });
     } catch (e) {
       if (mounted && e is ProcessException) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        SmartDialog.showToast(e.message);
       }
       setState(() => _isLoading = false);
       // 弹窗让用户填写adb 地址
@@ -220,14 +220,20 @@ class _HomePageState extends ConsumerState<HomePage> {
                     const SizedBox(width: 8),
                     IconButton(
                       onPressed: () async {
-                        final result = await FilePicker.platform.pickFiles(
-                          type: FileType.custom,
-                          allowedExtensions: Platform.isWindows ? ['exe'] : null,
-                          allowMultiple: false,
-                        );
+                        SmartDialog.showLoading(msg: '请等待...');
+                        await Future.delayed(const Duration(milliseconds: 1500)); // 给UI一个短暂的时间来显示加载动画
+                        try {
+                          final result = await Future.microtask(() => FilePicker.platform.pickFiles(
+                                type: FileType.custom,
+                                allowedExtensions: Platform.isWindows ? ['exe'] : null,
+                                allowMultiple: false,
+                              ));
 
-                        if (result != null && result.files.isNotEmpty) {
-                          controller.text = result.files.first.path!;
+                          if (result != null && result.files.isNotEmpty) {
+                            controller.text = result.files.first.path!;
+                          }
+                        } finally {
+                          SmartDialog.dismiss();
                         }
                       },
                       icon: const Icon(Icons.folder_open),
@@ -252,27 +258,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                 onPressed: () async {
                   final path = controller.text.trim();
                   if (path.isEmpty) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('请选择 ADB 可执行文件')),
-                      );
-                    }
+                    SmartDialog.showToast('请选择 ADB 可执行文件');
                     return;
                   }
 
                   final file = File(path);
                   if (!await file.exists()) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('指定的文件不存在')),
-                      );
-                    }
+                    SmartDialog.showToast('指定的文件不存在');
                     return;
                   }
 
                   _adbService.adbPath = path;
                   await _configService.saveAdbPath(path);
-                  if (mounted) Navigator.of(context).pop(path);
+                  SmartDialog.dismiss();
                 },
                 child: const Text('确定'),
               ),
@@ -289,7 +287,11 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Future<void> _startScrcpy(String deviceId) async {
     final config = _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId);
-    await _adbService.startScrcpy(deviceId, config.toJson());
+    try {
+      await _adbService.startScrcpy(deviceId, config.toJson());
+    } catch (e) {
+      if (mounted) SmartDialog.showToast(e as String);
+    }
   }
 
   void _selectDevice(String deviceId) {

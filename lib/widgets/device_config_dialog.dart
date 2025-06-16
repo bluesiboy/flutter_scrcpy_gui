@@ -148,7 +148,7 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                   ),
                   SizedBox(height: layoutConfig.verticalSpacing * 2),
                   TextFormField(
-                    initialValue: _config.maxSize?.toString(),
+                    initialValue: _config.maxSize.toString(),
                     decoration: InputDecoration(
                       labelText: '最大尺寸 (像素)',
                       helperText: '推荐值：1920（1080p）或 2560（2K）',
@@ -163,7 +163,7 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                   ),
                   SizedBox(height: layoutConfig.verticalSpacing * 2),
                   TextFormField(
-                    initialValue: _config.bitRate?.toString(),
+                    initialValue: _config.bitRate.toString(),
                     decoration: InputDecoration(
                       labelText: '比特率 (Mbps)',
                       helperText: '推荐值：8-16，值越大画质越好但占用更多带宽',
