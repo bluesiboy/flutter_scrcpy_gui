@@ -5,47 +5,25 @@ import 'package:flutter_scrcpy_gui/services/config_service.dart';
 import 'package:flutter_scrcpy_gui/models/device_config.dart';
 import 'package:flutter_scrcpy_gui/widgets/breath_glow_widget.dart';
 import 'package:flutter_scrcpy_gui/widgets/device_config_dialog.dart';
+import 'package:flutter_scrcpy_gui/widgets/device_card.dart';
+import 'package:flutter_scrcpy_gui/config/layout_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 
-// 布局尺寸配置
-class LayoutSizes {
-  static const double titleFontSize = 20.0;
-  static const double titleFontSizeCompact = 16.0;
-
-  static const double toolbarHeight = 56.0;
-  static const double toolbarHeightCompact = 40.0;
-
-  static const double iconSize = 24.0;
-  static const double iconSizeCompact = 20.0;
-
-  static const double buttonPadding = 12.0;
-  static const double buttonPaddingCompact = 8.0;
-
-  static const double buttonMinSize = 48.0;
-  static const double buttonMinSizeCompact = 32.0;
-
-  static const double cardMargin = 16.0;
-  static const double cardMarginCompact = 8.0;
-
-  static const double cardPadding = 16.0;
-  static const double cardPaddingCompact = 8.0;
-
-  static const double verticalSpacing = 8.0;
-  static const double verticalSpacingCompact = 4.0;
-
-  static const double horizontalSpacing = 8.0;
-  static const double horizontalSpacingCompact = 4.0;
-}
-
 // 定义一个Riverpod StateProvider来管理紧凑模式状态
 final isCompactModeProvider = StateProvider<bool>((ref) => false); // 默认为舒适模式 (false)
 
 // 定义一个Riverpod StateProvider来管理主题模式
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system); // 默认为跟随系统
+
+// 定义一个Riverpod Provider来获取当前布局配置
+final layoutConfigProvider = Provider<LayoutConfig>((ref) {
+  final isCompact = ref.watch(isCompactModeProvider);
+  return LayoutConfig.getConfig(isCompact);
+});
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -134,9 +112,9 @@ class _MainAppState extends ConsumerState<MainApp> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    // ignore: unused_local_variable
     final isCompactMode = ref.watch(isCompactModeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final layoutConfig = ref.watch(layoutConfigProvider);
 
     return MaterialApp(
       title: 'Scrcpy GUI By blueisboy',
@@ -371,6 +349,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final isCompactMode = ref.watch(isCompactModeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final layoutConfig = ref.watch(layoutConfigProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -379,7 +358,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             Text(
               'Scrcpy GUI By',
               style: TextStyle(
-                fontSize: isCompactMode ? LayoutSizes.titleFontSizeCompact : LayoutSizes.titleFontSize,
+                fontSize: layoutConfig.titleFontSize,
               ),
             ),
             BreathGlowWidget(
@@ -390,74 +369,74 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: Text(
                   'blueisboy',
                   style: TextStyle(
-                    fontSize: isCompactMode ? LayoutSizes.titleFontSizeCompact : LayoutSizes.titleFontSize,
+                    fontSize: layoutConfig.titleFontSize,
                   ),
                 ),
               ),
             ),
           ],
         ),
-        toolbarHeight: isCompactMode ? LayoutSizes.toolbarHeightCompact : LayoutSizes.toolbarHeight,
+        toolbarHeight: layoutConfig.toolbarHeight,
         actions: [
           IconButton(
             icon: Icon(
               _getThemeModeIcon(themeMode),
-              size: isCompactMode ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+              size: layoutConfig.iconSize,
             ),
             onPressed: _toggleThemeMode,
             tooltip: _getThemeModeTooltip(themeMode),
             padding: EdgeInsets.symmetric(
-              horizontal: isCompactMode ? LayoutSizes.buttonPaddingCompact : LayoutSizes.buttonPadding,
+              horizontal: layoutConfig.buttonPadding,
             ),
             constraints: BoxConstraints(
-              minWidth: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
-              minHeight: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
+              minWidth: layoutConfig.buttonMinSize,
+              minHeight: layoutConfig.buttonMinSize,
             ),
           ),
           IconButton(
             icon: Icon(
               isCompactMode ? Icons.expand : Icons.compress,
-              size: isCompactMode ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+              size: layoutConfig.iconSize,
             ),
             onPressed: _toggleCompactMode,
             tooltip: isCompactMode ? '切换到舒适模式' : '切换到紧凑模式',
             padding: EdgeInsets.symmetric(
-              horizontal: isCompactMode ? LayoutSizes.buttonPaddingCompact : LayoutSizes.buttonPadding,
+              horizontal: layoutConfig.buttonPadding,
             ),
             constraints: BoxConstraints(
-              minWidth: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
-              minHeight: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
+              minWidth: layoutConfig.buttonMinSize,
+              minHeight: layoutConfig.buttonMinSize,
             ),
           ),
           IconButton(
             tooltip: '刷新设备',
             icon: Icon(
               Icons.refresh,
-              size: isCompactMode ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+              size: layoutConfig.iconSize,
             ),
             onPressed: _refreshDevices,
             padding: EdgeInsets.symmetric(
-              horizontal: isCompactMode ? LayoutSizes.buttonPaddingCompact : LayoutSizes.buttonPadding,
+              horizontal: layoutConfig.buttonPadding,
             ),
             constraints: BoxConstraints(
-              minWidth: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
-              minHeight: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
+              minWidth: layoutConfig.buttonMinSize,
+              minHeight: layoutConfig.buttonMinSize,
             ),
           ),
           IconButton(
             tooltip: '打赏支持',
             icon: Icon(
               Icons.favorite,
-              size: isCompactMode ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
+              size: layoutConfig.iconSize,
               color: Colors.red,
             ),
             onPressed: () => _showDonateDialog(context),
             padding: EdgeInsets.symmetric(
-              horizontal: isCompactMode ? LayoutSizes.buttonPaddingCompact : LayoutSizes.buttonPadding,
+              horizontal: layoutConfig.buttonPadding,
             ),
             constraints: BoxConstraints(
-              minWidth: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
-              minHeight: isCompactMode ? LayoutSizes.buttonMinSizeCompact : LayoutSizes.buttonMinSize,
+              minWidth: layoutConfig.buttonMinSize,
+              minHeight: layoutConfig.buttonMinSize,
             ),
           ),
         ],
@@ -561,11 +540,20 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   // 显示打赏弹窗
   void _showDonateDialog(BuildContext context) {
+    final isCompactMode = ref.watch(isCompactModeProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width <= 600 && !isCompactMode;
+    final imageSize = isCompactMode ? 120.0 : 180.0;
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        insetPadding: isSmallScreen ? EdgeInsets.zero : null,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          // width: isSmallScreen ? MediaQuery.of(context).size.width - 10 : null,
+          padding: isSmallScreen
+              ? const EdgeInsets.symmetric(horizontal: 10, vertical: 20)
+              : const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          // padding: const EdgeInsets.all(24),
           constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
           child: SingleChildScrollView(
             child: Column(
@@ -596,8 +584,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           borderRadius: BorderRadius.circular(8),
                           child: Image.asset(
                             'assets/attachs/wechat_pay.png',
-                            width: 180,
-                            height: 180,
+                            width: imageSize,
+                            height: imageSize,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -611,8 +599,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           borderRadius: BorderRadius.circular(8),
                           child: Image.asset(
                             'assets/attachs/ali_pay.png',
-                            width: 180,
-                            height: 180,
+                            width: imageSize,
+                            height: imageSize,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -638,184 +626,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class DeviceCard extends StatefulWidget {
-  final String deviceId;
-  final String statusText;
-  final String deviceState;
-  final bool canConnect;
-  final bool isSelected;
-  final Function(String) onSelect;
-  final Function(String)? onStart;
-  final Function(DeviceConfig) onConfigChanged;
-  final DeviceConfig config;
-  final bool isCompact;
-
-  const DeviceCard({
-    super.key,
-    required this.deviceId,
-    required this.statusText,
-    required this.deviceState,
-    required this.canConnect,
-    required this.isSelected,
-    required this.onSelect,
-    this.onStart,
-    required this.onConfigChanged,
-    required this.config,
-    this.isCompact = false,
-  });
-
-  @override
-  State<DeviceCard> createState() => _DeviceCardState();
-}
-
-class _DeviceCardState extends State<DeviceCard> {
-  String? _deviceName;
-  bool _isLoading = true;
-  bool _isRunning = false;
-  final _adbService = AdbService();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDeviceName();
-  }
-
-  Future<void> _loadDeviceName() async {
-    try {
-      final name = await _adbService.getDeviceName(widget.deviceId);
-      if (mounted) {
-        setState(() {
-          _deviceName = name;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _deviceName = widget.deviceId;
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _handleStart() async {
-    if (_isRunning) return;
-    setState(() => _isRunning = true);
-    try {
-      await widget.onStart?.call(widget.deviceId);
-    } finally {
-      if (mounted) setState(() => _isRunning = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final isCompact = widget.isCompact;
-    return Card(
-      margin: EdgeInsets.symmetric(
-        horizontal: isCompact ? LayoutSizes.cardMarginCompact : LayoutSizes.cardMargin,
-        vertical: isCompact ? LayoutSizes.verticalSpacingCompact : LayoutSizes.verticalSpacing,
-      ),
-      color: widget.isSelected ? Theme.of(context).colorScheme.primaryContainer : null,
-      child: InkWell(
-        onTap: () => widget.onSelect(widget.deviceId),
-        child: ListTile(
-          dense: isCompact,
-          minVerticalPadding: isCompact ? 0.0 : 8.0,
-          minLeadingWidth: isCompact ? 24.0 : 32.0,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: isCompact ? LayoutSizes.cardPaddingCompact : LayoutSizes.cardPadding,
-            vertical: isCompact ? 2.0 : 4.0,
-          ),
-          leading: _isLoading
-              ? SizedBox(
-                  width: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                  height: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                  child: const CircularProgressIndicator(strokeWidth: 2.0),
-                )
-              : Icon(
-                  Icons.phone_android,
-                  size: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                  color: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
-                ),
-          title: isCompact
-              ? Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _deviceName ?? widget.deviceId,
-                        style: textTheme.bodyMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(
-                      widget.deviceState,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: widget.canConnect ? Colors.green : Colors.orange,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                )
-              : Text(
-                  _deviceName ?? widget.deviceId,
-                  style: textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-          subtitle: !isCompact
-              ? Text(
-                  widget.deviceState,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: widget.canConnect ? Colors.green : Colors.orange,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                )
-              : null,
-          trailing: widget.canConnect && widget.onStart != null
-              ? IconButton(
-                  onPressed: _isRunning ? null : _handleStart,
-                  icon: _isRunning
-                      ? SizedBox(
-                          width: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                          height: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                          child: const CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          Icons.play_arrow,
-                          size: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                  tooltip: '启动',
-                  constraints: BoxConstraints(
-                    minWidth: isCompact ? 32 : 48,
-                    minHeight: isCompact ? 32 : 48,
-                    maxWidth: isCompact ? 32 : 48,
-                    maxHeight: isCompact ? 32 : 48,
-                  ),
-                  padding: EdgeInsets.all(isCompact ? 4 : 8),
-                )
-              : widget.statusText.isNotEmpty
-                  ? Tooltip(
-                      message: widget.statusText,
-                      child: Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.orange,
-                        size: isCompact ? LayoutSizes.iconSizeCompact : LayoutSizes.iconSize,
-                      ),
-                    )
-                  : null,
         ),
       ),
     );
