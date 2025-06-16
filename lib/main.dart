@@ -290,7 +290,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     try {
       await _adbService.startScrcpy(deviceId, config.toJson());
     } catch (e) {
-      if (mounted) SmartDialog.showToast(e as String);
+      if (mounted) SmartDialog.showToast(e.toString());
     }
   }
 

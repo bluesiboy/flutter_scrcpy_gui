@@ -165,7 +165,7 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                   TextFormField(
                     initialValue: _config.bitRate.toString(),
                     decoration: InputDecoration(
-                      labelText: '比特率 (Mbps)',
+                      labelText: '视频编码率 (Mbps)',
                       helperText: '推荐值：8-16，值越大画质越好但占用更多带宽',
                       border: const OutlineInputBorder(),
                       isDense: widget.isCompact,
