@@ -154,18 +154,18 @@ class AdbService {
 
     if (options['recordFormat'] != null) {
       final format = options['recordFormat'].toString().toLowerCase();
-      if (!['mp4', 'mkv'].contains(format)) {
-        throw Exception('不支持的录制格式: $format，支持的格式: mp4, mkv');
+      if (format.isNotEmpty && !['mp4', 'mkv'].contains(format)) {
+        throw Exception('未知录制格式: $format，仅支持: mp4, mkv');
       }
     }
 
     // 验证编码器参数
-    if (options['encoder'] != null) {
-      final encoder = options['encoder'].toString().toLowerCase();
-      if (!['h264', 'h265'].contains(encoder)) {
-        throw Exception('不支持的编码器: $encoder，支持的编码器: H.264, H.265');
-      }
-    }
+    // if (options['encoder'] != null) {
+    //   final encoder = options['encoder'].toString().toLowerCase();
+    //   if (!['h264', 'h265'].contains(encoder)) {
+    //     throw Exception('未知编码器: $encoder，仅支持: H.264, H.265');
+    //   }
+    // }
 
     // 验证视频方向锁定参数
     if (options['lockVideoOrientation'] != null) {
