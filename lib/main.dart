@@ -441,6 +441,21 @@ class _HomePageState extends ConsumerState<HomePage> {
               minHeight: layoutConfig.buttonMinSize,
             ),
           ),
+          IconButton(
+            tooltip: '帮助',
+            icon: Icon(
+              Icons.help_outline,
+              size: layoutConfig.iconSize,
+            ),
+            onPressed: () => _showHelpDialog(context),
+            padding: EdgeInsets.symmetric(
+              horizontal: layoutConfig.buttonPadding,
+            ),
+            constraints: BoxConstraints(
+              minWidth: layoutConfig.buttonMinSize,
+              minHeight: layoutConfig.buttonMinSize,
+            ),
+          ),
         ],
       ),
       body: Column(
@@ -629,6 +644,156 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // 显示帮助对话框
+  void _showHelpDialog(BuildContext context) {
+    final isCompactMode = ref.watch(isCompactModeProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width <= 600 && !isCompactMode;
+    final modKey = Platform.isWindows
+        ? "Alt"
+        : Platform.isMacOS
+            ? "Command"
+            : "Super";
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: isSmallScreen ? EdgeInsets.zero : null,
+        child: Container(
+          padding: isSmallScreen
+              ? const EdgeInsets.symmetric(horizontal: 10, vertical: 20)
+              : const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          constraints: const BoxConstraints(maxWidth: 800, maxHeight: 800),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.help_outline, size: 28),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Scrcpy 使用帮助',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _buildHelpSection(
+                  '基本操作',
+                  [
+                    '• 点击设备卡片上的"启动"按钮开始投屏',
+                    '• 启动后，scrcpy 窗口会自动打开',
+                    '• 在 scrcpy 窗口中：',
+                    '  - 使用鼠标点击和拖动来操作设备',
+                    '  - 使用键盘输入文字',
+                    '  - 使用快捷键控制投屏（见下方说明）',
+                  ],
+                ),
+                _buildHelpSection(
+                  '快捷键说明',
+                  [
+                    '注意：以下快捷键需要在 scrcpy 窗口激活时使用',
+                    '（点击 scrcpy 窗口使其获得焦点）',
+                    '',
+                    'Mod 键说明：',
+                    '• Windows 系统：使用 $modKey 键',
+                    '• macOS 系统：使用 Command 键',
+                    '• Linux 系统：使用 Super 键',
+                    '',
+                    '基本操作：',
+                    '• $modKey + c：复制设备剪贴板到电脑',
+                    '• $modKey + v：粘贴电脑剪贴板到设备',
+                    '• $modKey + f：切换全屏模式',
+                    '• $modKey + q：退出',
+                    '',
+                    '显示控制：',
+                    '• $modKey + h：显示/隐藏控制面板',
+                    '• $modKey + r：旋转屏幕',
+                    '• $modKey + s：切换显示状态栏',
+                    '• $modKey + n：切换显示通知栏',
+                    '• $modKey + t：切换显示触摸点',
+                    '• $modKey + m：切换显示鼠标点击',
+                    '• $modKey + i：切换显示设备信息',
+                    '• $modKey + p：切换显示电源按钮',
+                    '• $modKey + w：切换显示窗口边框',
+                    '• $modKey + z：切换显示FPS',
+                    '',
+                    '其他功能：',
+                    '• $modKey + x：切换显示触摸点',
+                    '• $modKey + b：切换显示黑边',
+                    '• $modKey + g：切换显示网格',
+                    '• $modKey + d：切换显示调试信息',
+                    '• $modKey + k：切换显示键盘',
+                    '• $modKey + l：切换显示日志',
+                    '• $modKey + u：切换显示USB调试',
+                    '• $modKey + y：切换显示系统UI',
+                  ],
+                ),
+                _buildHelpSection(
+                  '小技巧',
+                  [
+                    '• 在配置面板中可以调整投屏质量和性能',
+                    '• 可以保存每个设备的独立配置',
+                    '• 支持多设备同时投屏',
+                    '• 可以调整窗口大小和位置',
+                    '• 支持深色/浅色主题切换',
+                    '• 支持紧凑/舒适模式切换',
+                    '• 如果快捷键不起作用，请确保 scrcpy 窗口处于激活状态',
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('关闭'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHelpSection(String title, List<String> items) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...items.map((item) => Padding(
+                padding: const EdgeInsets.only(left: 16, bottom: 8),
+                child: Text(
+                  item,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              )),
+        ],
       ),
     );
   }

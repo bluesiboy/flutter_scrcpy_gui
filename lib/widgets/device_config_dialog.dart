@@ -104,7 +104,7 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '设备配置 - ${widget.config.deviceId}',
+                '核心配置 - ${widget.config.deviceId}',
                 style: textTheme.titleMedium,
               ),
             ],
@@ -192,6 +192,71 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                     }),
                   ),
                   SizedBox(height: layoutConfig.verticalSpacing * 2),
+                  Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(layoutConfig.cardPadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('快捷键修饰符', style: textTheme.titleSmall),
+                          SizedBox(height: layoutConfig.verticalSpacing),
+                          Wrap(
+                            spacing: layoutConfig.horizontalSpacing,
+                            runSpacing: layoutConfig.verticalSpacing,
+                            children: [
+                              ...List.generate(
+                                7,
+                                (index) {
+                                  final Map<String, String> mods = {
+                                    '自动': '',
+                                    '左 Ctrl': 'lctrl',
+                                    '左 Alt': 'lalt',
+                                    '左 Super': 'lsuper',
+                                    '右 Ctrl': 'rctrl',
+                                    '右 Alt': 'ralt',
+                                    '右 Super': 'rsuper',
+                                  };
+                                  final label = mods.keys.elementAt(index);
+                                  final value = mods.values.elementAt(index);
+                                  final isSelected = value.isEmpty
+                                      ? _config.shortcutMod == null || _config.shortcutMod!.isEmpty
+                                      : _config.shortcutMod?.contains(value) ?? false;
+
+                                  return FilterChip(
+                                    label: Text(label, style: widget.isCompact ? textTheme.labelSmall : null),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        if (value.isEmpty) {
+                                          _config = _config.copyWith(shortcutMod: selected ? null : '');
+                                        } else {
+                                          final currentMods = _config.shortcutMod?.split(',') ?? [];
+                                          if (selected) {
+                                            currentMods.add(value);
+                                          } else {
+                                            currentMods.remove(value);
+                                          }
+                                          _config = _config.copyWith(
+                                            shortcutMod: currentMods.isEmpty ? null : currentMods.join(','),
+                                          );
+                                        }
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: layoutConfig.verticalSpacing),
+                          Text(
+                            '提示：选择"自动"将使用系统默认值，或选择任意组合的修饰键',
+                            style: textTheme.bodySmall?.copyWith(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: layoutConfig.verticalSpacing * 2),
                   Text('编码选项',
                       style: widget.isCompact
                           ? textTheme.titleSmall
@@ -257,12 +322,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                               width: 120,
                               child: TextFormField(
                                 initialValue: _config.crop,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  border: OutlineInputBorder(),
+                                  contentPadding: layoutConfig.formFieldPadding,
+                                  border: const OutlineInputBorder(),
                                   labelText: '宽:高:X:Y',
+                                  labelStyle: layoutConfig.inputLabelStyle,
                                 ),
+                                style: layoutConfig.inputStyle,
                                 onChanged: (value) => setState(() {
                                   _config = _config.copyWith(crop: value.isEmpty ? null : value);
                                 }),
@@ -279,12 +346,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                               width: 120,
                               child: TextFormField(
                                 initialValue: _config.lockVideoOrientation?.toString(),
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  border: OutlineInputBorder(),
+                                  contentPadding: layoutConfig.formFieldPadding,
+                                  border: const OutlineInputBorder(),
                                   labelText: '方向值',
+                                  labelStyle: layoutConfig.inputLabelStyle,
                                 ),
+                                style: layoutConfig.inputStyle,
                                 keyboardType: TextInputType.number,
                                 onChanged: (value) => setState(() {
                                   _config = _config.copyWith(
@@ -317,12 +386,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                               width: 120,
                               child: TextFormField(
                                 initialValue: _config.windowTitle,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  border: OutlineInputBorder(),
+                                  contentPadding: layoutConfig.formFieldPadding,
+                                  border: const OutlineInputBorder(),
                                   labelText: '标题',
+                                  labelStyle: layoutConfig.inputLabelStyle,
                                 ),
+                                style: layoutConfig.inputStyle,
                                 onChanged: (value) => setState(() {
                                   _config = _config.copyWith(windowTitle: value.isEmpty ? null : value);
                                 }),
@@ -342,12 +413,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                   width: 60,
                                   child: TextFormField(
                                     initialValue: _config.windowX?.toString(),
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                      border: OutlineInputBorder(),
+                                      contentPadding: layoutConfig.formFieldPadding,
+                                      border: const OutlineInputBorder(),
                                       labelText: 'X (px)',
+                                      labelStyle: layoutConfig.inputLabelStyle,
                                     ),
+                                    style: layoutConfig.inputStyle,
                                     keyboardType: TextInputType.number,
                                     onChanged: (value) => setState(() {
                                       _config = _config.copyWith(windowX: value.isEmpty ? null : int.tryParse(value));
@@ -359,12 +432,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                   width: 60,
                                   child: TextFormField(
                                     initialValue: _config.windowY?.toString(),
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                      border: OutlineInputBorder(),
+                                      contentPadding: layoutConfig.formFieldPadding,
+                                      border: const OutlineInputBorder(),
                                       labelText: 'Y (px)',
+                                      labelStyle: layoutConfig.inputLabelStyle,
                                     ),
+                                    style: layoutConfig.inputStyle,
                                     keyboardType: TextInputType.number,
                                     onChanged: (value) => setState(() {
                                       _config = _config.copyWith(windowY: value.isEmpty ? null : int.tryParse(value));
@@ -387,12 +462,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                   width: 60,
                                   child: TextFormField(
                                     initialValue: _config.windowWidth?.toString(),
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                      border: OutlineInputBorder(),
+                                      contentPadding: layoutConfig.formFieldPadding,
+                                      border: const OutlineInputBorder(),
                                       labelText: '宽 (px)',
+                                      labelStyle: layoutConfig.inputLabelStyle,
                                     ),
+                                    style: layoutConfig.inputStyle,
                                     keyboardType: TextInputType.number,
                                     onChanged: (value) => setState(() {
                                       _config =
@@ -405,12 +482,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                                   width: 60,
                                   child: TextFormField(
                                     initialValue: _config.windowHeight?.toString(),
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                      border: OutlineInputBorder(),
+                                      contentPadding: layoutConfig.formFieldPadding,
+                                      border: const OutlineInputBorder(),
                                       labelText: '高 (px)',
+                                      labelStyle: layoutConfig.inputLabelStyle,
                                     ),
+                                    style: layoutConfig.inputStyle,
                                     keyboardType: TextInputType.number,
                                     onChanged: (value) => setState(() {
                                       _config =
@@ -445,12 +524,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                               width: 120,
                               child: TextFormField(
                                 initialValue: _config.recordDirectory,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  border: OutlineInputBorder(),
+                                  contentPadding: layoutConfig.formFieldPadding,
+                                  border: const OutlineInputBorder(),
                                   labelText: '目录路径',
+                                  labelStyle: layoutConfig.inputLabelStyle,
                                 ),
+                                style: layoutConfig.inputStyle,
                                 onChanged: (value) => setState(() {
                                   _config = _config.copyWith(recordDirectory: value.isEmpty ? null : value);
                                 }),
@@ -467,12 +548,14 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                               width: 120,
                               child: TextFormField(
                                 initialValue: _config.recordFormat,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                  border: OutlineInputBorder(),
+                                  contentPadding: layoutConfig.formFieldPadding,
+                                  border: const OutlineInputBorder(),
                                   labelText: '格式',
+                                  labelStyle: layoutConfig.inputLabelStyle,
                                 ),
+                                style: layoutConfig.inputStyle,
                                 onChanged: (value) => setState(() {
                                   _config = _config.copyWith(recordFormat: value.isEmpty ? null : value);
                                 }),

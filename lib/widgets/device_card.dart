@@ -86,14 +86,15 @@ class _DeviceCardState extends State<DeviceCard> {
       ),
       color: widget.isSelected ? Theme.of(context).colorScheme.primaryContainer : null,
       child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () => widget.onSelect(widget.deviceId),
         child: ListTile(
-          dense: widget.isCompact,
-          minVerticalPadding: widget.isCompact ? 0.0 : 8.0,
-          minLeadingWidth: widget.isCompact ? 24.0 : 32.0,
+          dense: true,
+          minVerticalPadding: layoutConfig.verticalSpacing / 2,
+          minLeadingWidth: layoutConfig.iconSize,
           contentPadding: EdgeInsets.symmetric(
             horizontal: layoutConfig.cardPadding,
-            vertical: widget.isCompact ? 2.0 : 4.0,
+            vertical: layoutConfig.verticalSpacing / 2,
           ),
           leading: _isLoading
               ? SizedBox(
@@ -106,7 +107,7 @@ class _DeviceCardState extends State<DeviceCard> {
                   size: layoutConfig.iconSize,
                   color: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
                 ),
-          title: widget.isCompact
+          title: layoutConfig.titleFontSize <= 16.0
               ? Row(
                   children: [
                     Expanded(
@@ -133,7 +134,7 @@ class _DeviceCardState extends State<DeviceCard> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-          subtitle: !widget.isCompact
+          subtitle: layoutConfig.titleFontSize > 16.0
               ? Text(
                   widget.deviceState,
                   style: textTheme.bodySmall?.copyWith(

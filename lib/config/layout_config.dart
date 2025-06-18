@@ -42,6 +42,12 @@ class LayoutConfig {
   /// 视觉密度
   final VisualDensity visualDensity;
 
+  /// 输入框标签样式
+  final TextStyle? inputLabelStyle;
+
+  /// 输入框内容样式
+  final TextStyle? inputStyle;
+
   /// 构造函数
   const LayoutConfig({
     required this.titleFontSize,
@@ -57,6 +63,8 @@ class LayoutConfig {
     required this.dividerHeight,
     required this.switchScale,
     required this.visualDensity,
+    required this.inputLabelStyle,
+    required this.inputStyle,
   });
 
   /// 舒适模式配置
@@ -74,6 +82,8 @@ class LayoutConfig {
     dividerHeight: 1.0,
     switchScale: 1.0,
     visualDensity: VisualDensity.standard,
+    inputLabelStyle: null,
+    inputStyle: null,
   );
 
   /// 紧凑模式配置
@@ -91,6 +101,8 @@ class LayoutConfig {
     dividerHeight: 0.5,
     switchScale: 0.7,
     visualDensity: VisualDensity.compact,
+    inputLabelStyle: TextStyle(fontSize: 14.0),
+    inputStyle: TextStyle(fontSize: 14.0),
   );
 
   /// 根据是否紧凑模式获取对应的配置
