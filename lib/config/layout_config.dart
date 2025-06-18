@@ -101,7 +101,7 @@ class LayoutConfig {
     dividerHeight: 0.5,
     switchScale: 0.7,
     visualDensity: VisualDensity.compact,
-    inputLabelStyle: TextStyle(fontSize: 14.0),
+    inputLabelStyle: TextStyle(fontSize: 13.0),
     inputStyle: TextStyle(fontSize: 14.0),
   );
 
