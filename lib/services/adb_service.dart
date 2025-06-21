@@ -77,7 +77,7 @@ class AdbService {
         throw Exception('adb 可执行文件不存在: $adbPath');
       }
       final devices = await getConnectedDevices();
-      return devices.contains(deviceId) == true;
+      return devices.any((device) => device['id'] == deviceId);
     } catch (e) {
       return false;
     }
