@@ -13,6 +13,7 @@ class ConfigService {
   static const String _windowTopKey = 'window_top';
   static const String _themeModeKey = 'theme_mode';
   static const String _adbPathKey = 'adb_path';
+  static const String _scrcpyPathKey = 'scrcpy_path';
   final SharedPreferences _prefs;
 
   ConfigService(this._prefs);
@@ -95,5 +96,15 @@ class ConfigService {
   // 获取 ADB 路径
   String? getAdbPath() {
     return _prefs.getString(_adbPathKey);
+  }
+
+  // 保存 Scrcpy 路径
+  Future<void> saveScrcpyPath(String path) async {
+    await _prefs.setString(_scrcpyPathKey, path);
+  }
+
+  // 获取 Scrcpy 路径
+  String? getScrcpyPath() {
+    return _prefs.getString(_scrcpyPathKey);
   }
 }

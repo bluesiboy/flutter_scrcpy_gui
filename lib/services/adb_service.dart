@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:path/path.dart' as path;
+import 'package:flutter_scrcpy_gui/services/config_service.dart';
 
 class AdbService {
   final String? scrcpyPath;
   String? adbPath;
+  final ConfigService? configService;
 
-  AdbService({this.adbPath, this.scrcpyPath});
+  AdbService({this.adbPath, this.scrcpyPath, this.configService});
 
   Future<String> get _adbExecutable async {
     // 首先尝试从环境变量中查找 adb
@@ -43,6 +45,10 @@ class AdbService {
 
   String get _scrcpyExecutable {
     if (scrcpyPath != null) return scrcpyPath!;
+    if (configService != null) {
+      final path = configService!.getScrcpyPath();
+      if (path != null && path.isNotEmpty) return path;
+    }
     if (Platform.isWindows) return 'scrcpy.exe';
     return 'scrcpy';
   }

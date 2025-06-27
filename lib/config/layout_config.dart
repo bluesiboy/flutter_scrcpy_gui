@@ -12,6 +12,10 @@ class LayoutConfig {
   /// 图标大小
   final double iconSize;
 
+  /// 紧凑/舒适
+  final IconData displayMode;
+  final String displayModelTooltip;
+
   /// 按钮内边距
   final double buttonPadding;
 
@@ -65,6 +69,8 @@ class LayoutConfig {
     required this.visualDensity,
     required this.inputLabelStyle,
     required this.inputStyle,
+    required this.displayMode,
+    required this.displayModelTooltip,
   });
 
   /// 舒适模式配置
@@ -84,6 +90,8 @@ class LayoutConfig {
     visualDensity: VisualDensity.standard,
     inputLabelStyle: null,
     inputStyle: null,
+    displayMode: Icons.compress,
+    displayModelTooltip: '切换到紧凑模式',
   );
 
   /// 紧凑模式配置
@@ -103,10 +111,14 @@ class LayoutConfig {
     visualDensity: VisualDensity.compact,
     inputLabelStyle: TextStyle(fontSize: 13.0),
     inputStyle: TextStyle(fontSize: 14.0),
+    displayMode: Icons.expand,
+    displayModelTooltip: '切换到舒适模式',
   );
 
   /// 根据是否紧凑模式获取对应的配置
   static LayoutConfig getConfig(bool isCompact) {
     return isCompact ? compact : comfortable;
   }
+
+  bool get isCompact => this == compact;
 }

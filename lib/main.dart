@@ -152,8 +152,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    _adbService = AdbService();
     _configService = ConfigService(widget.prefs);
+    _adbService = AdbService(configService: _configService);
     _breathGlowController = BreathGlowController(breathCount: 100);
     _breathGlowController.start();
 
@@ -270,7 +270,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                   _adbService.adbPath = path;
                   await _configService.saveAdbPath(path);
-                  SmartDialog.dismiss();
+                  if (context.mounted) Navigator.of(context).pop();
                 },
                 child: const Text('确定'),
               ),
@@ -298,6 +298,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     setState(() {
       _selectedDeviceId = deviceId;
     });
+    // 获取当前选中设备的配置
+    final config = _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId);
+    // 判断 scrcpy 路径是否有值，为空则赋予默认值
+    if (config.scrcpyPath == null || config.scrcpyPath!.isEmpty) {
+      final defaultScrcpyPath = _configService.getScrcpyPath();
+      final newConfig = config.copyWith(scrcpyPath: defaultScrcpyPath);
+      _configService.saveDeviceConfig(newConfig);
+    }
   }
 
   Future<void> _saveConfig(DeviceConfig config) async {
@@ -349,7 +357,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isCompactMode = ref.watch(isCompactModeProvider);
     final themeMode = ref.watch(themeModeProvider);
     final layoutConfig = ref.watch(layoutConfigProvider);
 
@@ -381,10 +388,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         toolbarHeight: layoutConfig.toolbarHeight,
         actions: [
           IconButton(
-            icon: Icon(
-              _getThemeModeIcon(themeMode),
-              size: layoutConfig.iconSize,
-            ),
+            icon: Icon(_getThemeModeIcon(themeMode), size: layoutConfig.iconSize),
             onPressed: _toggleThemeMode,
             tooltip: _getThemeModeTooltip(themeMode),
             padding: EdgeInsets.symmetric(
@@ -396,12 +400,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
           IconButton(
-            icon: Icon(
-              isCompactMode ? Icons.expand : Icons.compress,
-              size: layoutConfig.iconSize,
-            ),
+            icon: Icon(layoutConfig.displayMode, size: layoutConfig.iconSize),
             onPressed: _toggleCompactMode,
-            tooltip: isCompactMode ? '切换到舒适模式' : '切换到紧凑模式',
+            tooltip: layoutConfig.displayModelTooltip,
             padding: EdgeInsets.symmetric(
               horizontal: layoutConfig.buttonPadding,
             ),
@@ -412,10 +413,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           IconButton(
             tooltip: '刷新设备',
-            icon: Icon(
-              Icons.refresh,
-              size: layoutConfig.iconSize,
-            ),
+            icon: Icon(Icons.refresh, size: layoutConfig.iconSize),
             onPressed: _refreshDevices,
             padding: EdgeInsets.symmetric(
               horizontal: layoutConfig.buttonPadding,
@@ -427,11 +425,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           IconButton(
             tooltip: '打赏支持',
-            icon: Icon(
-              Icons.favorite,
-              size: layoutConfig.iconSize,
-              color: Colors.red,
-            ),
+            icon: Icon(Icons.favorite, size: layoutConfig.iconSize, color: Colors.red),
             onPressed: () => _showDonateDialog(context),
             padding: EdgeInsets.symmetric(
               horizontal: layoutConfig.buttonPadding,
@@ -443,10 +437,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           IconButton(
             tooltip: '帮助',
-            icon: Icon(
-              Icons.help_outline,
-              size: layoutConfig.iconSize,
-            ),
+            icon: Icon(Icons.help_outline, size: layoutConfig.iconSize),
             onPressed: () => _showHelpDialog(context),
             padding: EdgeInsets.symmetric(
               horizontal: layoutConfig.buttonPadding,
@@ -512,7 +503,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           onConfigChanged: (config) => _saveConfig(config),
                           config: _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId),
                           isSelected: deviceId == _selectedDeviceId,
-                          isCompact: isCompactMode,
+                          isCompact: layoutConfig.isCompact,
                         ).animate().fadeIn().slideX();
                       },
                     ),
@@ -537,7 +528,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         key: ValueKey(deviceId),
                         config: config,
                         onSave: _saveConfig,
-                        isCompact: isCompactMode,
+                        isCompact: layoutConfig.isCompact,
+                        configService: _configService,
                       );
                     }).toList(),
                   ),
@@ -557,9 +549,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   // 显示打赏弹窗
   void _showDonateDialog(BuildContext context) {
-    final isCompactMode = ref.watch(isCompactModeProvider);
-    final isSmallScreen = MediaQuery.of(context).size.width <= 600 && !isCompactMode;
-    final imageSize = isCompactMode ? 120.0 : 180.0;
+    final layoutConfig = ref.watch(layoutConfigProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width <= 600 && !layoutConfig.isCompact;
+    final imageSize = layoutConfig.isCompact ? 120.0 : 180.0;
 
     showDialog(
       context: context,
@@ -650,8 +642,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   // 显示帮助对话框
   void _showHelpDialog(BuildContext context) {
-    final isCompactMode = ref.watch(isCompactModeProvider);
-    final isSmallScreen = MediaQuery.of(context).size.width <= 600 && !isCompactMode;
+    final layoutConfig = ref.watch(layoutConfigProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width <= 600 && !layoutConfig.isCompact;
     final modKey = Platform.isWindows
         ? "Alt"
         : Platform.isMacOS

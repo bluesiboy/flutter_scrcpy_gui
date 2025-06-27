@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_scrcpy_gui/models/device_config.dart';
 import 'package:flutter_scrcpy_gui/config/layout_config.dart';
+import 'package:flutter_scrcpy_gui/services/config_service.dart';
 
 class DeviceConfigDialog extends StatefulWidget {
   final DeviceConfig config;
   final Function(DeviceConfig) onSave;
   final bool isCompact;
+  final ConfigService configService;
 
   const DeviceConfigDialog({
     super.key,
     required this.config,
     required this.onSave,
+    required this.configService,
     this.isCompact = false,
   });
 
@@ -126,11 +129,39 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                         onChanged: (value) => _config = _config.copyWith(adbPath: value.isEmpty ? null : value),
                       ),
                       SizedBox(height: layoutConfig.verticalSpacing * 2),
-                      _buildFormField(
-                        label: 'Scrcpy 路径',
-                        helperText: '留空则使用默认路径',
-                        initialValue: _config.scrcpyPath,
-                        onChanged: (value) => _config = _config.copyWith(scrcpyPath: value.isEmpty ? null : value),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              initialValue: _config.scrcpyPath,
+                              decoration: InputDecoration(
+                                labelText: 'Scrcpy 路径',
+                                helperText: '留空则使用默认路径',
+                                border: const OutlineInputBorder(),
+                                isDense: widget.isCompact,
+                                contentPadding: layoutConfig.formFieldPadding,
+                                suffixIcon: TextButton(
+                                  child: const Text('设置为默认'),
+                                  onPressed: () async {
+                                    final path = _config.scrcpyPath;
+                                    if (path == null || path.isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('请输入 Scrcpy 路径后再设置为默认')),
+                                      );
+                                      return;
+                                    }
+                                    await widget.configService.saveScrcpyPath(path);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('已设置为默认 Scrcpy 路径')),
+                                    );
+                                  },
+                                ),
+                              ),
+                              onChanged: (value) =>
+                                  setState(() => _config = _config.copyWith(scrcpyPath: value.isEmpty ? null : value)),
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: layoutConfig.verticalSpacing * 2),
                       _buildFormField(

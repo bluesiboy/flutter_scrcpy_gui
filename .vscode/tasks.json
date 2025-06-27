@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build & Codesign macOS Release",
+            "type": "shell",
+            "command": "flutter build macos --release && codesign --force --deep --sign \"Apple Development: 8618634381748 (H26554M42V)\" build/macos/Build/Products/Release/flutter_scrcpy_gui.app",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
