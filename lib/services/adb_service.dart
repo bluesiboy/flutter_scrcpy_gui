@@ -401,4 +401,24 @@ class AdbService {
 
     return null; // 未找到
   }
+
+  /// 获取设备真实序列号（无论USB还是WiFi连接都一致）
+  Future<String?> getDeviceSerial(String deviceId) async {
+    final adbPath = await _adbExecutable;
+    if (!await File(adbPath).exists()) {
+      throw Exception('adb 可执行文件不存在: $adbPath');
+    }
+    try {
+      final result = await Process.run(adbPath, ['-s', deviceId, 'shell', 'getprop', 'ro.serialno']);
+      if (result.exitCode == 0) {
+        final serial = result.stdout.toString().trim();
+        if (serial.isNotEmpty && serial.toLowerCase() != 'unknown') {
+          return serial;
+        }
+      }
+    } catch (e) {
+      // 忽略异常，返回null
+    }
+    return null;
+  }
 }

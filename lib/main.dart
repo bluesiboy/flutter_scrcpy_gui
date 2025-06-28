@@ -78,6 +78,11 @@ class MainApp extends ConsumerStatefulWidget {
 class _MainAppState extends ConsumerState<MainApp> with WindowListener {
   late final ConfigService _configService;
   DeviceConfig? currentSelectedConfig;
+  List<Map<String, String>> _devices = [];
+  String? _selectedDeviceId;
+  String? _selectedDeviceSerial;
+  Map<String, String?> _deviceIdToSerial = {};
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -147,6 +152,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   late final BreathGlowController _breathGlowController;
   List<Map<String, String>> _devices = [];
   String? _selectedDeviceId;
+  String? _selectedDeviceSerial;
+  Map<String, String?> _deviceIdToSerial = {};
   bool _isLoading = false;
 
   @override
@@ -176,11 +183,19 @@ class _HomePageState extends ConsumerState<HomePage> {
     setState(() => _isLoading = true);
     try {
       final devices = await _adbService.getConnectedDevices();
+      // 获取所有设备的序列号
+      _deviceIdToSerial.clear();
+      for (final device in devices) {
+        final id = device['id']!;
+        final serial = await _adbService.getDeviceSerial(id);
+        _deviceIdToSerial[id] = serial;
+      }
       setState(() {
         _devices = devices;
         _isLoading = false;
         if (_selectedDeviceId == null || !devices.any((d) => d['id'] == _selectedDeviceId)) {
           _selectedDeviceId = devices.isNotEmpty ? devices.first['id'] : null;
+          _selectedDeviceSerial = _selectedDeviceId != null ? _deviceIdToSerial[_selectedDeviceId!] : null;
         }
       });
     } catch (e) {
@@ -286,7 +301,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _startScrcpy(String deviceId) async {
-    final config = _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId);
+    final serial = _deviceIdToSerial[deviceId];
+    final config = serial != null
+        ? (_configService.getDeviceConfig(serial) ?? DeviceConfig(deviceId: serial))
+        : DeviceConfig(deviceId: deviceId);
     try {
       await _adbService.startScrcpy(deviceId, config.toJson());
     } catch (e) {
@@ -297,6 +315,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _selectDevice(String deviceId) {
     setState(() {
       _selectedDeviceId = deviceId;
+      _selectedDeviceSerial = _deviceIdToSerial[deviceId];
     });
     // 获取当前选中设备的配置
     final config = _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId);
@@ -309,6 +328,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _saveConfig(DeviceConfig config) async {
+    // 保存时用serial作为key
     await _configService.saveDeviceConfig(config);
   }
 
@@ -475,6 +495,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         final device = _devices[index];
                         final deviceId = device['id']!;
                         final deviceState = device['state']!;
+                        final serial = _deviceIdToSerial[deviceId];
                         String statusText;
                         bool canConnect = false;
 
@@ -501,7 +522,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                           onStart: canConnect ? (id) => _startScrcpy(id) : null,
                           onSelect: (id) => _selectDevice(id),
                           onConfigChanged: (config) => _saveConfig(config),
-                          config: _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId),
+                          config: serial != null
+                              ? (_configService.getDeviceConfig(serial) ?? DeviceConfig(deviceId: serial))
+                              : DeviceConfig(deviceId: deviceId),
                           isSelected: deviceId == _selectedDeviceId,
                           isCompact: layoutConfig.isCompact,
                         ).animate().fadeIn().slideX();
@@ -523,7 +546,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     index: _devices.indexWhere((d) => d['id'] == _selectedDeviceId),
                     children: _devices.map((device) {
                       final deviceId = device['id']!;
-                      final config = _configService.getDeviceConfig(deviceId) ?? DeviceConfig(deviceId: deviceId);
+                      final serial = _deviceIdToSerial[deviceId];
+                      final config = serial != null
+                          ? (_configService.getDeviceConfig(serial) ?? DeviceConfig(deviceId: serial))
+                          : DeviceConfig(deviceId: deviceId);
                       return DeviceConfigDialog(
                         key: ValueKey(deviceId),
                         config: config,
