@@ -37,6 +37,13 @@ static void my_application_activate(GApplication* application) {
     }
   }
 #endif
+  // 检查是否为 KDE/Plasma 桌面环境
+  const gchar* xdg_current_desktop = g_getenv("XDG_CURRENT_DESKTOP");
+  const gchar* desktop_session = g_getenv("DESKTOP_SESSION");
+  if ((xdg_current_desktop && g_strrstr(xdg_current_desktop, "KDE")) ||
+      (desktop_session && g_strrstr(desktop_session, "plasma"))) {
+    use_header_bar = FALSE;
+  }
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));

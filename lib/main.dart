@@ -78,11 +78,6 @@ class MainApp extends ConsumerStatefulWidget {
 class _MainAppState extends ConsumerState<MainApp> with WindowListener {
   late final ConfigService _configService;
   DeviceConfig? currentSelectedConfig;
-  List<Map<String, String>> _devices = [];
-  String? _selectedDeviceId;
-  String? _selectedDeviceSerial;
-  Map<String, String?> _deviceIdToSerial = {};
-  bool _isLoading = false;
 
   @override
   void initState() {
