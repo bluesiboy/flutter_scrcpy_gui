@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_scrcpy_gui/models/device_config.dart';
 import 'package:flutter_scrcpy_gui/config/layout_config.dart';
 import 'package:flutter_scrcpy_gui/services/config_service.dart';
+import 'package:flutter_scrcpy_gui/models/path_history.dart';
+import 'package:file_picker/file_picker.dart';
 
 class DeviceConfigDialog extends StatefulWidget {
   final DeviceConfig config;
@@ -74,6 +76,73 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
     );
   }
 
+  Widget _buildFormFieldWithBrowse({
+    required String label,
+    required String helperText,
+    required String? initialValue,
+    required Function(String) onChanged,
+    required List<String> history,
+    required String fileTypeDesc,
+    TextInputType? keyboardType,
+  }) {
+    final layoutConfig = LayoutConfig.getConfig(widget.isCompact);
+    final controller = TextEditingController(text: initialValue);
+    final textStyle = layoutConfig.inputStyle ?? Theme.of(context).textTheme.bodyMedium;
+    final itemPadding =
+        EdgeInsets.symmetric(horizontal: layoutConfig.cardPadding, vertical: layoutConfig.verticalSpacing + 2);
+    final itemHeight = widget.isCompact ? 32.0 : 44.0;
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helperText,
+        border: const OutlineInputBorder(),
+        isDense: widget.isCompact,
+        contentPadding: layoutConfig.formFieldPadding,
+        suffixIcon: PopupMenuButton<String>(
+          icon: const Icon(Icons.folder_open),
+          onSelected: (value) async {
+            if (value == '__file_picker__') {
+              String? result = await FilePicker.platform.pickFiles(
+                dialogTitle: '选择$fileTypeDesc文件',
+                type: FileType.custom,
+                allowedExtensions: ['exe', ''],
+              ).then((picked) => picked?.files.single.path);
+              if (result != null && result.isNotEmpty) {
+                controller.text = result;
+                onChanged(result);
+              }
+            } else {
+              final path = value.split(' (').first.trim();
+              controller.text = path;
+              onChanged(path);
+            }
+          },
+          itemBuilder: (context) {
+            final items = history.where((e) => e.isNotEmpty).toList();
+            return [
+              ...items.map((e) => PopupMenuItem(
+                    value: e,
+                    height: itemHeight,
+                    padding: itemPadding,
+                    child: Text(e, style: textStyle),
+                  )),
+              if (items.isNotEmpty) const PopupMenuDivider(),
+              PopupMenuItem(
+                value: '__file_picker__',
+                height: itemHeight,
+                padding: itemPadding,
+                child: Text('选择一个$fileTypeDesc文件', style: textStyle),
+              ),
+            ];
+          },
+        ),
+      ),
+      keyboardType: keyboardType,
+      onChanged: (value) => setState(() => onChanged(value)),
+    );
+  }
+
   Widget _buildConfigSection({
     required String title,
     required List<Widget> children,
@@ -122,46 +191,22 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
                     title: '基本配置',
                     titleStyle: titleStyle,
                     children: [
-                      _buildFormField(
+                      _buildFormFieldWithBrowse(
                         label: 'ADB 路径',
                         helperText: '留空则使用默认路径',
                         initialValue: _config.adbPath,
                         onChanged: (value) => _config = _config.copyWith(adbPath: value.isEmpty ? null : value),
+                        history: PathHistory.getAdbDisplayList(),
+                        fileTypeDesc: 'ADB',
                       ),
                       SizedBox(height: layoutConfig.verticalSpacing * 2),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              initialValue: _config.scrcpyPath,
-                              decoration: InputDecoration(
-                                labelText: 'Scrcpy 路径',
-                                helperText: '留空则使用默认路径',
-                                border: const OutlineInputBorder(),
-                                isDense: widget.isCompact,
-                                contentPadding: layoutConfig.formFieldPadding,
-                                suffixIcon: TextButton(
-                                  child: const Text('设置为默认'),
-                                  onPressed: () async {
-                                    final path = _config.scrcpyPath;
-                                    if (path == null || path.isEmpty) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('请输入 Scrcpy 路径后再设置为默认')),
-                                      );
-                                      return;
-                                    }
-                                    await widget.configService.saveScrcpyPath(path);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('已设置为默认 Scrcpy 路径')),
-                                    );
-                                  },
-                                ),
-                              ),
-                              onChanged: (value) =>
-                                  setState(() => _config = _config.copyWith(scrcpyPath: value.isEmpty ? null : value)),
-                            ),
-                          ),
-                        ],
+                      _buildFormFieldWithBrowse(
+                        label: 'Scrcpy 路径',
+                        helperText: '留空则使用默认路径',
+                        initialValue: _config.scrcpyPath,
+                        onChanged: (value) => _config = _config.copyWith(scrcpyPath: value.isEmpty ? null : value),
+                        history: PathHistory.getScrcpyDisplayList(),
+                        fileTypeDesc: 'scrcpy',
                       ),
                       SizedBox(height: layoutConfig.verticalSpacing * 2),
                       _buildFormField(
@@ -622,6 +667,8 @@ class _DeviceConfigDialogState extends State<DeviceConfigDialog> {
               FilledButton(
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {
+                    PathHistory.addAdbPath(_config.adbPath);
+                    PathHistory.addScrcpyPath(_config.scrcpyPath);
                     widget.onSave(_config);
                   }
                 },

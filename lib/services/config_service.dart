@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_scrcpy_gui/models/device_config.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 
 class ConfigService {
@@ -20,17 +19,17 @@ class ConfigService {
 
   Future<void> saveDeviceConfig(DeviceConfig config) async {
     final json = config.toJson();
-    await _prefs.setString('${_configPrefix}${config.deviceId}', jsonEncode(json));
+    await _prefs.setString('$_configPrefix${config.deviceId}', jsonEncode(json));
   }
 
   DeviceConfig? getDeviceConfig(String deviceId) {
-    final jsonStr = _prefs.getString('${_configPrefix}$deviceId');
+    final jsonStr = _prefs.getString('$_configPrefix$deviceId');
     if (jsonStr == null) return null;
     return DeviceConfig.fromJson(jsonDecode(jsonStr));
   }
 
   Future<void> deleteDeviceConfig(String deviceId) async {
-    await _prefs.remove('${_configPrefix}$deviceId');
+    await _prefs.remove('$_configPrefix$deviceId');
   }
 
   List<String> getAllDeviceIds() {

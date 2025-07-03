@@ -219,9 +219,6 @@ class AdbService {
       args.add(recordPath);
       args.add('--record-format');
       args.add(format);
-    } else if (options['record'] != null) {
-      args.add('--record');
-      args.add(options['record']);
     }
 
     // 编码相关参数
